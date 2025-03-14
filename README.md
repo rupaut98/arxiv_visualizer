@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # README
 
 This README would normally document whatever steps are necessary to get the
@@ -23,6 +22,3 @@ Things you may want to cover:
 * Deployment instructions
 
 * ...
-=======
-# arxiv_visualizer
->>>>>>> db916272f1f87de7d8fa3d8b9be7688a30b5d27f

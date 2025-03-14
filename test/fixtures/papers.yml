@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  arxiv_id: MyString
+  title: MyString
+  authors: MyText
+  abstract: MyText
+  url: MyString
+  published_date: 2025-03-13
+
+two:
+  arxiv_id: MyString
+  title: MyString
+  authors: MyText
+  abstract: MyText
+  url: MyString
+  published_date: 2025-03-13
