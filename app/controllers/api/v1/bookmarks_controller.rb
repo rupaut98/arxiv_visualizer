@@ -1,53 +1,56 @@
-class Api::V1::PapersController < ApplicationController
-    skip_before_action :authenticate_user, only: [:index, :show]
+class Api::V1::BookmarksController < ApplicationController
+    before_action :set_bookmark, only: [:destroy]
   
     def index
-      if params[:query].present?
-        papers = ArxivService.search(params[:query], params[:start] || 0, params[:max_results] || 10)
-        render json: papers
-      else
-        render json: [], status: :ok
-      end
+      bookmarks = current_user.bookmarks.includes(:paper)
+      render json: bookmarks.as_json(include: :paper)
     end
   
-    def show
-      paper = Paper.find_by(arxiv_id: params[:id]) || find_and_create_paper(params[:id])
+    def create
+      # Find or create the paper in the database
+      paper = Paper.find_by(arxiv_id: params[:arxiv_id])
       
-      if paper
-        render json: paper.as_json(include: :citations)
-      else
-        render json: { error: 'Paper not found' }, status: :not_found
-      end
-    end
-  
-    def citations
-      paper = Paper.find_by(arxiv_id: params[:id])
-      
-      if paper
-        citations = paper.citations.map do |citation|
-          cited_paper = Paper.find_by(arxiv_id: citation.cited_paper_arxiv_id)
-          if cited_paper
-            cited_paper.as_json
-          else
-            { arxiv_id: citation.cited_paper_arxiv_id }
-          end
-        end
+      unless paper
+        paper_data = ArxivService.get_paper(params[:arxiv_id])
+        return render json: { error: 'Paper not found' }, status: :not_found unless paper_data
         
-        render json: citations
-      else
-        render json: { error: 'Paper not found' }, status: :not_found
+        paper = Paper.create(
+          arxiv_id: paper_data[:arxiv_id],
+          title: paper_data[:title],
+          authors: paper_data[:authors],
+          abstract: paper_data[:abstract],
+          url: paper_data[:url],
+          published_date: paper_data[:published_date]
+        )
       end
+      
+      # Check if already bookmarked
+      existing_bookmark = current_user.bookmarks.find_by(paper_id: paper.id)
+      if existing_bookmark
+        return render json: { message: 'Paper already bookmarked' }, status: :ok
+      end
+      
+      # Create bookmark
+      bookmark = current_user.bookmarks.new(paper: paper, notes: params[:notes])
+      
+      if bookmark.save
+        render json: bookmark.as_json(include: :paper), status: :created
+      else
+        render json: { errors: bookmark.errors.full_messages }, status: :unprocessable_entity
+      end
+    end
+  
+    def destroy
+      @bookmark.destroy
+      head :no_content
     end
   
     private
   
-    def find_and_create_paper(arxiv_id)
-      paper_data = ArxivService.get_paper(arxiv_id)
-      return nil unless paper_data
-      
-      paper = Paper.create(paper_data)
-
-      paper
+    def set_bookmark
+      @bookmark = current_user.bookmarks.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: 'Bookmark not found' }, status: :not_found
     end
   end
   
