@@ -3,9 +3,13 @@ default: &default
   encoding: utf8mb4
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   username: root
-  password: <%= ENV['DB_PASSWORD'] %>
-  host: localhost
+  password:
+  socket: /opt/homebrew/var/mysql/mysql.sock
 
 development:
   <<: *default
   database: arxiv_visualizer_development
+
+test:
+  <<: *default
+  database: arxiv_visualizer_test
