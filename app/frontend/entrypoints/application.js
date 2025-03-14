@@ -1,13 +1,22 @@
 import { createApp } from 'vue'
-import App from '../components/App.vue' // You'll create this file
+import App from '../components/App.vue'
+import router from '../router'
+import store from '../store'
+import axios from 'axios'
 
-// Mount Vue app if the element exists
+// Set up axios with authentication
+const token = localStorage.getItem('token')
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
+// Create and mount Vue app
 document.addEventListener('DOMContentLoaded', () => {
   const element = document.getElementById('app')
   if (element) {
     const app = createApp(App)
+    app.use(router)
+    app.use(store)
     app.mount(element)
   }
 })
-
-// Keep your existing JS code below

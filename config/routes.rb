@@ -1,14 +1,23 @@
 Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
-
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  # Defines the root path route ("/")
-  # root "posts#index"
+  namespace :api do
+    namespace :v1 do
+      # Auth routes
+      post '/register', to: 'auth#register'
+      post '/login', to: 'auth#login'
+      
+      # Paper routes
+      resources :papers, only: [:index, :show]
+      get '/papers/:id/citations', to: 'papers#citations'
+      
+      # Bookmark routes
+      resources :bookmarks, only: [:index, :create, :update, :destroy]
+    end
+  end
+  
+  # Route all other requests to the Vue.js frontend
+  get '*path', to: 'application#index', constraints: lambda { |req|
+    req.path.exclude? 'rails/active_storage' and req.path.exclude? 'api/'
+  }
+  
+  root 'application#index'
 end
