@@ -2,9 +2,17 @@ require 'httparty'
 require 'nokogiri'
 
 class ArxivService
-  def self.search(query, start = 0, max_results = 10)
-    url = "http://export.arxiv.org/api/query?search_query=#{URI.encode(query)}&start=#{start}&max_results=#{max_results}"
-    response = HTTParty.get(url)
+  def self.search(query, start = 0, max_results = 10, sort_by = nil)
+    url = "http://export.arxiv.org/api/query"
+    params = {
+      search_query: query,
+      start: start,
+      max_results: max_results
+    }
+    
+    params[:sortBy] = sort_by if sort_by
+    
+    response = HTTParty.get(url, query: params)
     parse_response(response.body)
   end
   
@@ -14,8 +22,6 @@ class ArxivService
     papers = parse_response(response.body)
     papers.first if papers.any?
   end
-  
-  private
   
   def self.parse_response(xml)
     doc = Nokogiri::XML(xml)
