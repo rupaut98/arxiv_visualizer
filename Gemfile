@@ -55,5 +55,8 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem "vite_rails"
-
+  gem 'bcrypt', '~> 3.1.7'
+  gem 'jwt'
+  gem 'httparty'
+  gem 'nokogiri'
 end
