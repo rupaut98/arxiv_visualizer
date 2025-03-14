@@ -11,9 +11,9 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.0].define(version: 2025_03_14_005754) do
-  create_table "bookmarks", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "paper_id", null: false
+  create_table "bookmarks", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "paper_id", null: false
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -21,15 +21,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_14_005754) do
     t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
-  create_table "citations", force: :cascade do |t|
-    t.integer "paper_id", null: false
+  create_table "citations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "paper_id", null: false
     t.string "cited_paper_arxiv_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["paper_id"], name: "index_citations_on_paper_id"
   end
 
-  create_table "papers", force: :cascade do |t|
+  create_table "papers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "arxiv_id"
     t.string "title"
     t.text "authors"
@@ -40,7 +40,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_03_14_005754) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "users", force: :cascade do |t|
+  create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "email"
     t.string "username"
     t.string "password_digest"
