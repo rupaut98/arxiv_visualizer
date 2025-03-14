@@ -46,7 +46,7 @@ class Api::V1::PapersController < ApplicationController
       return nil unless paper_data
       
       paper = Paper.create(paper_data)
-      # Here you would also fetch and save citations
+
       paper
     end
   end
