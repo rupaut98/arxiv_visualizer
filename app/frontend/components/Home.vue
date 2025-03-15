@@ -13,11 +13,26 @@
       </div>
       
       <div class="actions">
-        <router-link to="/search" class="btn primary">Start Exploring</router-link>
-        <router-link to="/login" class="btn secondary">Sign In</router-link>
+        <div v-if="isLoggedIn">
+          <router-link to="/search" class="btn primary">Start Exploring</router-link>
+          <router-link to="/bookmarks" class="btn secondary">My Bookmarks</router-link>
+        </div>
+        <div v-else>
+          <router-link to="/login" class="btn primary">Sign In</router-link>
+          <router-link to="/register" class="btn secondary">Register</router-link>
+        </div>
       </div>
     </div>
   </template>
+  
+  <script setup>
+  import { computed } from 'vue'
+  import { useStore } from 'vuex'
+  
+  const store = useStore()
+  const isLoggedIn = computed(() => store.getters.isLoggedIn)
+  </script>
+  
   
   <style scoped>
   .welcome {

@@ -1,5 +1,7 @@
+# app/controllers/application_controller.rb
 class ApplicationController < ActionController::Base
-  before_action :authenticate_user, except: [:index]
+  protect_from_forgery with: :null_session
+  before_action :authenticate_user
   
   def index
     render template: 'layouts/application'
@@ -9,16 +11,14 @@ class ApplicationController < ActionController::Base
   
   def authenticate_user
     header = request.headers['Authorization']
-    if header
-      token = header.split(' ').last
-      begin
-        @decoded = JWT.decode(token, Rails.application.secrets.secret_key_base)[0]
-        @current_user = User.find(@decoded['user_id'])
-      rescue JWT::DecodeError
-        render json: { error: 'Invalid token' }, status: :unauthorized
-      end
-    else
-      render json: { error: 'Token required' }, status: :unauthorized
+    return render json: { error: 'Unauthorized' }, status: :unauthorized unless header
+    
+    token = header.split(' ').last
+    begin
+      decoded = JWT.decode(token, Rails.application.secret_key_base)[0]
+      @current_user = User.find(decoded['user_id'])
+    rescue JWT::DecodeError, ActiveRecord::RecordNotFound
+      render json: { error: 'Invalid token' }, status: :unauthorized
     end
   end
   
