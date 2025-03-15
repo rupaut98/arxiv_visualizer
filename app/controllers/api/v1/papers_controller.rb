@@ -1,5 +1,5 @@
 class Api::V1::PapersController < ApplicationController
-  skip_before_action :authenticate_user, only: [:index, :show]
+  skip_before_action :authenticate_user, only: [:index, :show, :search]
 
   def index
     if params[:query].present?
@@ -21,6 +21,26 @@ class Api::V1::PapersController < ApplicationController
     end
   end
   
+  def search
+    if params[:query].present?
+      page = params[:page].to_i
+      page = 1 if page < 1
+      
+      start = (page - 1) * 10  # 10 results per page
+      
+      # Use the existing ArxivService search method
+      papers = ArxivService.search(
+        params[:query],
+        start,
+        10,
+        params[:sort_by] || 'relevance'
+      )
+      
+      render json: { papers: papers }
+    else
+      render json: { papers: [] }, status: :ok
+    end
+  end
 
   def show
     paper = Paper.find_by(arxiv_id: params[:id])

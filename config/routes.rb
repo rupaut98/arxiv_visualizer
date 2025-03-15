@@ -6,7 +6,11 @@ Rails.application.routes.draw do
       post '/login', to: 'auth#login'
       
       # Paper routes
-      resources :papers, only: [:index, :show]
+      resources :papers, only: [:index, :show] do
+        collection do
+          get :search  # Add this line for the search endpoint
+        end
+      end
       get '/papers/:id/citations', to: 'papers#citations'
       
       # Bookmark routes

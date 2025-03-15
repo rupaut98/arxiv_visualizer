@@ -1,3 +1,4 @@
+# app/services/arxiv_service.rb
 require 'httparty'
 require 'nokogiri'
 
@@ -28,13 +29,22 @@ class ArxivService
     entries = doc.xpath('//xmlns:entry')
     
     entries.map do |entry|
+      published_text = entry.xpath('.//xmlns:published').text.strip
+      
+      # More robust date parsing
+      begin
+        published_date = published_text.present? ? Date.parse(published_text) : nil
+      rescue Date::Error
+        published_date = nil
+      end
+      
       {
         arxiv_id: entry.xpath('.//xmlns:id').text.split('/').last,
         title: entry.xpath('.//xmlns:title').text.strip,
         abstract: entry.xpath('.//xmlns:summary').text.strip,
         authors: entry.xpath('.//xmlns:author/xmlns:name').map(&:text).join(', '),
         url: entry.xpath('.//xmlns:id').text,
-        published_date: Date.parse(entry.xpath('.//xmlns:published').text)
+        published_date: published_date
       }
     end
   end

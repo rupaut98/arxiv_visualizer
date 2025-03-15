@@ -1,247 +1,376 @@
 <template>
-    <div class="paper-search">
-      <h2>Search ArXiv Papers</h2>
+    <div class="paper-search-container">
+      <h1>Search arXiv Papers</h1>
       
       <div class="search-form">
-        <div class="search-input">
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            placeholder="Search for papers..." 
-            @keyup.enter="searchPapers"
-          >
-          <button @click="searchPapers">Search</button>
-        </div>
-        
-        <div class="filters">
-          <div class="filter-group">
-            <label>Search in:</label>
-            <select v-model="searchField">
-              <option value="all">All fields</option>
-              <option value="ti">Title</option>
-              <option value="au">Author</option>
-              <option value="abs">Abstract</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label>Sort by:</label>
-            <select v-model="sortBy">
-              <option value="relevance">Relevance</option>
-              <option value="lastUpdatedDate">Last Updated</option>
-              <option value="submittedDate">Submission Date</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label>Results per page:</label>
-            <select v-model="maxResults">
-              <option>10</option>
-              <option>25</option>
-              <option>50</option>
-            </select>
-          </div>
-        </div>
+        <input 
+          type="text" 
+          v-model="searchQuery" 
+          placeholder="Search for papers..." 
+          @keyup.enter="searchPapers"
+        />
+        <button @click="searchPapers" class="search-button">Search</button>
       </div>
       
       <div v-if="loading" class="loading">
-        Loading papers...
+        <p>Loading papers...</p>
       </div>
       
-      <div v-else-if="papers.length > 0" class="paper-list">
-        <paper-list :papers="papers" @bookmark="bookmarkPaper"></paper-list>
-        
-        <!-- Pagination controls -->
-        <div class="pagination">
-          <button 
-            @click="previousPage" 
-            :disabled="currentPage === 1" 
-            class="pagination-btn"
-          >
-            Previous
-          </button>
-          <span class="page-info">Page {{ currentPage }}</span>
-          <button 
-            @click="nextPage" 
-            class="pagination-btn"
-          >
-            Next
-          </button>
+      <div v-else-if="error" class="error">
+        <p>{{ error }}</p>
+      </div>
+      
+      <div v-else class="papers-list">
+        <div v-for="paper in papers" :key="paper.arxiv_id" class="paper-card">
+          <div class="paper-header">
+            <h2 class="paper-title">{{ paper.title }}</h2>
+            <button 
+              @click="toggleBookmark(paper)" 
+              :class="['bookmark-button', { 'bookmarked': isBookmarked(paper.arxiv_id) }]"
+            >
+              {{ isBookmarked(paper.arxiv_id) ? 'Bookmarked' : 'Bookmark' }}
+            </button>
+          </div>
+          
+          <p class="paper-authors">{{ paper.authors }}</p>
+          <p class="paper-date">Published: {{ formatDate(paper.published_date) }}</p>
+          
+          <div class="paper-abstract">
+            <p>{{ paper.abstract }}</p>
+          </div>
+          
+          <div class="paper-actions">
+            <router-link :to="`/papers/${paper.arxiv_id}`" class="view-details">
+              View Details
+            </router-link>
+            <router-link :to="`/papers/${paper.arxiv_id}/citations`" class="view-citations">
+              View Citations
+            </router-link>
+          </div>
         </div>
       </div>
       
-      <div v-else-if="hasSearched" class="no-results">
-        No papers found. Try adjusting your search terms.
+      <div v-if="papers.length > 0 && !loading" class="pagination">
+        <button 
+          :disabled="currentPage === 1" 
+          @click="changePage(currentPage - 1)"
+          class="pagination-button"
+        >
+          Previous
+        </button>
+        <span>Page {{ currentPage }}</span>
+        <button 
+          @click="changePage(currentPage + 1)"
+          class="pagination-button"
+        >
+          Next
+        </button>
       </div>
     </div>
   </template>
   
-  <script setup>
-  import { ref, computed } from 'vue'
-  import { useRouter } from 'vue-router'
-  import axios from 'axios'
-  import PaperList from './PaperList.vue'
+  <script>
+  import { ref, computed, onMounted } from 'vue';
+  import { useStore } from 'vuex';
   
-  const router = useRouter()
-  const searchQuery = ref('')
-  const searchField = ref('all')
-  const sortBy = ref('relevance')
-  const maxResults = ref(10)
-  const papers = ref([])
-  const loading = ref(false)
-  const hasSearched = ref(false)
-  const currentPage = ref(1)
-  
-  // Compute the start index for pagination
-  const startIndex = computed(() => {
-    return (currentPage.value - 1) * maxResults.value
-  })
-  
-  const searchPapers = async (resetPage = true) => {
-    if (!searchQuery.value.trim()) return
+  export default {
+    name: 'PaperSearch',
     
-    if (resetPage) {
-      currentPage.value = 1
-    }
-    
-    loading.value = true
-    hasSearched.value = true
-    
-    try {
-      // Format the search query based on the selected field
-      let formattedQuery = searchQuery.value
-      if (searchField.value !== 'all') {
-        formattedQuery = `${searchField.value}:${formattedQuery}`
-      }
+    setup() {
+      const store = useStore();
       
-      // Call your backend API which will proxy to ArXiv
-      const response = await axios.get('/api/v1/papers', {
-        params: {
-          query: formattedQuery,
-          max_results: maxResults.value,
-          start: startIndex.value,
-          sort_by: sortBy.value
+      const searchQuery = ref('');
+      const papers = ref([]);
+      const loading = ref(false);
+      const error = ref(null);
+      const currentPage = ref(1);
+      const bookmarkedPapers = ref([]);
+      
+      // Fetch bookmarked papers on component mount
+      onMounted(async () => {
+        try {
+          if (store.getters.isLoggedIn) {
+            const response = await fetch('/api/v1/bookmarks', {
+              headers: {
+                'Authorization': `Bearer ${store.state.token}`
+              }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch bookmarks');
+            
+            const data = await response.json();
+            bookmarkedPapers.value = data.map(bookmark => bookmark.paper.arxiv_id);
+          }
+        } catch (err) {
+          console.error('Error fetching bookmarks:', err);
         }
-      })
+      });
       
-      papers.value = response.data
+      const searchPapers = async () => {
+        if (!searchQuery.value.trim()) return;
+        
+        loading.value = true;
+        error.value = null;
+        
+        try {
+          // Use the dedicated search endpoint
+          const response = await fetch(`/api/v1/papers/search?query=${encodeURIComponent(searchQuery.value)}&page=${currentPage.value}`, {
+            headers: {
+              'Authorization': store.getters.isLoggedIn ? `Bearer ${store.state.token}` : ''
+            }
+          });
+          
+          if (!response.ok) throw new Error('Failed to fetch papers');
+          
+          const data = await response.json();
+          papers.value = data.papers || [];
+        } catch (err) {
+          error.value = 'Error searching for papers. Please try again.';
+          console.error('Error searching papers:', err);
+        } finally {
+          loading.value = false;
+        }
+      };
       
-      // Scroll to top when loading new results
-      window.scrollTo(0, 0)
-    } catch (error) {
-      console.error('Error fetching papers:', error)
-    } finally {
-      loading.value = false
+      const changePage = (newPage) => {
+        if (newPage < 1) return;
+        
+        currentPage.value = newPage;
+        searchPapers();
+      };
+      
+      const formatDate = (dateString) => {
+        if (!dateString) return 'Unknown date';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      };
+      
+      const isBookmarked = (arxivId) => {
+        return bookmarkedPapers.value.includes(arxivId);
+      };
+      
+      const toggleBookmark = async (paper) => {
+        if (!store.getters.isLoggedIn) {
+          alert('Please log in to bookmark papers');
+          return;
+        }
+        
+        try {
+          if (isBookmarked(paper.arxiv_id)) {
+            // Find the bookmark ID
+            const response = await fetch('/api/v1/bookmarks', {
+              headers: {
+                'Authorization': `Bearer ${store.state.token}`
+              }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch bookmarks');
+            
+            const bookmarks = await response.json();
+            const bookmark = bookmarks.find(b => b.paper.arxiv_id === paper.arxiv_id);
+            
+            if (bookmark) {
+              // Delete the bookmark
+              const deleteResponse = await fetch(`/api/v1/bookmarks/${bookmark.id}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${store.state.token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (!deleteResponse.ok) throw new Error('Failed to remove bookmark');
+              
+              // Update local state
+              bookmarkedPapers.value = bookmarkedPapers.value.filter(id => id !== paper.arxiv_id);
+            }
+          } else {
+            // Add new bookmark
+            const response = await fetch('/api/v1/bookmarks', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${store.state.token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                arxiv_id: paper.arxiv_id,
+                notes: ''
+              })
+            });
+            
+            if (!response.ok) throw new Error('Failed to add bookmark');
+            
+            // Update local state
+            bookmarkedPapers.value.push(paper.arxiv_id);
+          }
+        } catch (err) {
+          console.error('Error toggling bookmark:', err);
+          alert('Failed to update bookmark. Please try again.');
+        }
+      };
+      
+      return {
+        searchQuery,
+        papers,
+        loading,
+        error,
+        currentPage,
+        searchPapers,
+        changePage,
+        formatDate,
+        isBookmarked,
+        toggleBookmark
+      };
     }
-  }
-  
-  const nextPage = () => {
-    currentPage.value++
-    searchPapers(false)
-  }
-  
-  const previousPage = () => {
-    if (currentPage.value > 1) {
-      currentPage.value--
-      searchPapers(false)
-    }
-  }
-  
-  const bookmarkPaper = (paper) => {
-    // Save bookmarks
-    axios.post('/api/v1/bookmarks', { arxiv_id: paper.arxiv_id })
-      .then(() => {
-        alert('Paper bookmarked successfully!')
-      })
-      .catch(error => {
-        console.error('Error bookmarking paper:', error)
-      })
   }
   </script>
   
   <style scoped>
-  .paper-search {
-    max-width: 1000px;
+  .paper-search-container {
+    max-width: 1200px;
     margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  h1 {
+    margin-bottom: 2rem;
+    color: #2c3e50;
   }
   
   .search-form {
-    margin: 20px 0;
-    padding: 15px;
-    background: #f5f5f5;
-    border-radius: 5px;
-  }
-  
-  .search-input {
     display: flex;
-    margin-bottom: 15px;
+    margin-bottom: 2rem;
   }
   
-  .search-input input {
+  input {
     flex: 1;
-    padding: 10px;
-    font-size: 16px;
+    padding: 0.75rem;
+    font-size: 1rem;
     border: 1px solid #ddd;
     border-radius: 4px 0 0 4px;
   }
   
-  .search-input button {
-    padding: 10px 20px;
-    background: #3273dc;
+  .search-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #4CAF50;
     color: white;
     border: none;
     border-radius: 0 4px 4px 0;
     cursor: pointer;
+    font-weight: bold;
   }
   
-  .filters {
+  .loading, .error {
+    text-align: center;
+    padding: 2rem;
+  }
+  
+  .papers-list {
+    display: grid;
+    gap: 1.5rem;
+  }
+  
+  .paper-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background-color: white;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .paper-header {
     display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
   }
   
-  .filter-group {
+  .paper-title {
+    font-size: 1.25rem;
+    margin: 0 1rem 0.5rem 0;
+    color: #2c3e50;
+    flex: 1;
+  }
+  
+  .paper-authors {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+  
+  .paper-date {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 1rem;
+  }
+  
+  .paper-abstract {
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    color: #333;
+    /* Allow the abstract to show completely */
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  
+  .paper-actions {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    gap: 1rem;
   }
   
-  select {
-    padding: 8px;
+  .view-details, .view-citations {
+    padding: 0.5rem 1rem;
+    background-color: #2196F3;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  
+  .view-citations {
+    background-color: #9C27B0;
+  }
+  
+  .bookmark-button {
+    padding: 0.5rem 1rem;
+    background-color: #f0f0f0;
     border: 1px solid #ddd;
     border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
   }
   
-  .loading, .no-results {
-    text-align: center;
-    margin: 40px 0;
-    color: #666;
+  .bookmark-button.bookmarked {
+    background-color: #FFC107;
+    color: #333;
   }
   
   .pagination {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 30px 0;
-    gap: 15px;
+    margin-top: 2rem;
+    gap: 1rem;
   }
   
-  .pagination-btn {
-    padding: 8px 15px;
-    background: #3273dc;
+  .pagination-button {
+    padding: 0.5rem 1rem;
+    background-color: #2196F3;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
   }
   
-  .pagination-btn:disabled {
-    background: #ccc;
+  .pagination-button:disabled {
+    background-color: #ccc;
     cursor: not-allowed;
-  }
-  
-  .page-info {
-    font-size: 16px;
   }
   </style>
   
