@@ -117,66 +117,67 @@
         });
 
       
-      const searchPapers = async () => {
-        if (!searchQuery.value.trim()) return;
-        
-        loading.value = true;
-        error.value = null;
-        
-        try {
-          // Use the dedicated search endpoint
-          const response = await fetch(`/api/v1/papers/search?query=${encodeURIComponent(searchQuery.value)}&page=${currentPage.value}`, {
-            headers: {
-              'Authorization': store.getters.isLoggedIn ? `Bearer ${store.state.token}` : ''
+        const searchPapers = async () => {
+            if (!searchQuery.value.trim()) return;
+            
+            loading.value = true;
+            error.value = null;
+            
+            try {
+            // Use the dedicated search endpoint
+            const response = await fetch(`/api/v1/papers/search?query=${encodeURIComponent(searchQuery.value)}&page=${currentPage.value}`, {
+                headers: {
+                'Authorization': store.getters.isLoggedIn ? `Bearer ${store.state.token}` : ''
+                }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch papers');
+            
+            const data = await response.json();
+            papers.value = data.papers || [];
+            } catch (err) {
+            error.value = 'Error searching for papers. Please try again.';
+            console.error('Error searching papers:', err);
+            } finally {
+            loading.value = false;
             }
-          });
-          
-          if (!response.ok) throw new Error('Failed to fetch papers');
-          
-          const data = await response.json();
-          papers.value = data.papers || [];
-        } catch (err) {
-          error.value = 'Error searching for papers. Please try again.';
-          console.error('Error searching papers:', err);
-        } finally {
-          loading.value = false;
-        }
-      };
+        };
       
-      const changePage = (newPage) => {
-        if (newPage < 1) return;
-        
-        currentPage.value = newPage;
-        searchPapers();
-      };
+        const changePage = (newPage) => {
+            if (newPage < 1) return;
+            
+            currentPage.value = newPage;
+            searchPapers();
+        };
       
-      const formatDate = (dateString) => {
-        if (!dateString) return 'Unknown date';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        });
-      };
+        const formatDate = (dateString) => {
+            if (!dateString) return 'Unknown date';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+            });
+        };
       
-      const isBookmarked = (arxivId) => {
-        return bookmarkedPapers.value.includes(arxivId);
-      };
+        const isBookmarked = (arxivId) => {
+            return bookmarkedPapers.value.includes(arxivId);
+        };
       
-      const toggleBookmark = async (paper) => {
+      // In PaperSearch.vue
+        const toggleBookmark = async (paper) => {
         if (!store.getters.isLoggedIn) {
-          alert('Please log in to bookmark papers');
-          return;
+            alert('Please log in to bookmark papers');
+            return;
         }
         
         try {
-          if (isBookmarked(paper.arxiv_id)) {
-            // Find the bookmark ID
+            if (isBookmarked(paper.arxiv_id)) {
+            // Find the bookmark ID to delete
             const response = await fetch('/api/v1/bookmarks', {
-              headers: {
+                headers: {
                 'Authorization': `Bearer ${store.state.token}`
-              }
+                }
             });
             
             if (!response.ok) throw new Error('Failed to fetch bookmarks');
@@ -185,203 +186,202 @@
             const bookmark = bookmarks.find(b => b.paper.arxiv_id === paper.arxiv_id);
             
             if (bookmark) {
-              // Delete the bookmark
-              const deleteResponse = await fetch(`/api/v1/bookmarks/${bookmark.id}`, {
+                // Delete the bookmark
+                const deleteResponse = await fetch(`/api/v1/bookmarks/${bookmark.id}`, {
                 method: 'DELETE',
                 headers: {
-                  'Authorization': `Bearer ${store.state.token}`,
-                  'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${store.state.token}`
                 }
-              });
-              
-              if (!deleteResponse.ok) throw new Error('Failed to remove bookmark');
-              
-              // Update local state
-              bookmarkedPapers.value = bookmarkedPapers.value.filter(id => id !== paper.arxiv_id);
+                });
+                
+                if (!deleteResponse.ok) throw new Error('Failed to remove bookmark');
+                
+                // Update local state
+                bookmarkedPapers.value = bookmarkedPapers.value.filter(id => id !== paper.arxiv_id);
             }
-          } else {
+            } else {
             // Add new bookmark
             const response = await fetch('/api/v1/bookmarks', {
-              method: 'POST',
-              headers: {
+                method: 'POST',
+                headers: {
                 'Authorization': `Bearer ${store.state.token}`,
                 'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
+                },
+                body: JSON.stringify({
                 arxiv_id: paper.arxiv_id,
                 notes: ''
-              })
+                })
             });
             
             if (!response.ok) throw new Error('Failed to add bookmark');
             
             // Update local state
             bookmarkedPapers.value.push(paper.arxiv_id);
-          }
+            }
         } catch (err) {
-          console.error('Error toggling bookmark:', err);
-          alert('Failed to update bookmark. Please try again.');
+            console.error('Error toggling bookmark:', err);
+            alert('Failed to update bookmark. Please try again.');
         }
-      };
-      
-      return {
-        searchQuery,
-        papers,
-        loading,
-        error,
-        currentPage,
-        searchPapers,
-        changePage,
-        formatDate,
-        isBookmarked,
-        toggleBookmark
-      };
+        };
+
+        return {
+            searchQuery,
+            papers,
+            loading,
+            error,
+            currentPage,
+            searchPapers,
+            changePage,
+            formatDate,
+            isBookmarked,
+            toggleBookmark
+        };
+        }
     }
-  }
   </script>
   
-  <style scoped>
-  .paper-search-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-  
-  h1 {
-    margin-bottom: 2rem;
-    color: #2c3e50;
-  }
-  
-  .search-form {
-    display: flex;
-    margin-bottom: 2rem;
-  }
-  
-  input {
-    flex: 1;
-    padding: 0.75rem;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px 0 0 4px;
-  }
-  
-  .search-button {
-    padding: 0.75rem 1.5rem;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  .loading, .error {
-    text-align: center;
-    padding: 2rem;
-  }
-  
-  .papers-list {
-    display: grid;
-    gap: 1.5rem;
-  }
-  
-  .paper-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    background-color: white;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .paper-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
-  }
-  
-  .paper-title {
-    font-size: 1.25rem;
-    margin: 0 1rem 0.5rem 0;
-    color: #2c3e50;
-    flex: 1;
-  }
-  
-  .paper-authors {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 0.5rem;
-  }
-  
-  .paper-date {
-    font-size: 0.8rem;
-    color: #888;
-    margin-bottom: 1rem;
-  }
-  
-  .paper-abstract {
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-    color: #333;
-    /* Allow the abstract to show completely */
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  
-  .paper-actions {
-    display: flex;
-    gap: 1rem;
-  }
-  
-  .view-details, .view-citations {
-    padding: 0.5rem 1rem;
-    background-color: #2196F3;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
-  
-  .view-citations {
-    background-color: #9C27B0;
-  }
-  
-  .bookmark-button {
-    padding: 0.5rem 1rem;
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-  
-  .bookmark-button.bookmarked {
-    background-color: #FFC107;
-    color: #333;
-  }
-  
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 2rem;
-    gap: 1rem;
-  }
-  
-  .pagination-button {
-    padding: 0.5rem 1rem;
-    background-color: #2196F3;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .pagination-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-  </style>
+<style scoped>
+.paper-search-container {
+max-width: 1200px;
+margin: 0 auto;
+padding: 2rem;
+}
+
+h1 {
+margin-bottom: 2rem;
+color: #2c3e50;
+}
+
+.search-form {
+display: flex;
+margin-bottom: 2rem;
+}
+
+input {
+flex: 1;
+padding: 0.75rem;
+font-size: 1rem;
+border: 1px solid #ddd;
+border-radius: 4px 0 0 4px;
+}
+
+.search-button {
+padding: 0.75rem 1.5rem;
+background-color: #4CAF50;
+color: white;
+border: none;
+border-radius: 0 4px 4px 0;
+cursor: pointer;
+font-weight: bold;
+}
+
+.loading, .error {
+text-align: center;
+padding: 2rem;
+}
+
+.papers-list {
+display: grid;
+gap: 1.5rem;
+}
+
+.paper-card {
+border: 1px solid #e0e0e0;
+border-radius: 8px;
+padding: 1.5rem;
+box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+background-color: white;
+width: 100%;
+box-sizing: border-box;
+}
+
+.paper-header {
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+margin-bottom: 0.5rem;
+}
+
+.paper-title {
+font-size: 1.25rem;
+margin: 0 1rem 0.5rem 0;
+color: #2c3e50;
+flex: 1;
+}
+
+.paper-authors {
+font-size: 0.9rem;
+color: #666;
+margin-bottom: 0.5rem;
+}
+
+.paper-date {
+font-size: 0.8rem;
+color: #888;
+margin-bottom: 1rem;
+}
+
+.paper-abstract {
+margin-bottom: 1.5rem;
+line-height: 1.6;
+color: #333;
+/* Allow the abstract to show completely */
+white-space: pre-wrap;
+word-break: break-word;
+}
+
+.paper-actions {
+display: flex;
+gap: 1rem;
+}
+
+.view-details, .view-citations {
+padding: 0.5rem 1rem;
+background-color: #2196F3;
+color: white;
+text-decoration: none;
+border-radius: 4px;
+font-size: 0.9rem;
+}
+
+.view-citations {
+background-color: #9C27B0;
+}
+
+.bookmark-button {
+padding: 0.5rem 1rem;
+background-color: #f0f0f0;
+border: 1px solid #ddd;
+border-radius: 4px;
+cursor: pointer;
+font-size: 0.9rem;
+}
+
+.bookmark-button.bookmarked {
+background-color: #FFC107;
+color: #333;
+}
+
+.pagination {
+display: flex;
+justify-content: center;
+align-items: center;
+margin-top: 2rem;
+gap: 1rem;
+}
+
+.pagination-button {
+padding: 0.5rem 1rem;
+background-color: #2196F3;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+}
+
+.pagination-button:disabled {
+background-color: #ccc;
+cursor: not-allowed;
+}
+</style>
   

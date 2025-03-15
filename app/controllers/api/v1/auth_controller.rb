@@ -13,15 +13,21 @@ class Api::V1::AuthController < ApplicationController
     end
   
     def login
-      user = User.find_by(email: params[:email])
-      
-      if user && user.authenticate(params[:password])
-        token = generate_token(user.id)
-        render json: { user: user.as_json(except: :password_digest), token: token }
-      else
+        user = User.find_by(email: params[:auth][:email])
+        
+        if user && user.authenticate(params[:auth][:password])
+        token = JWT.encode(
+            { user_id: user.id, exp: 24.hours.from_now.to_i },
+            Rails.application.secret_key_base,
+            'HS256'
+        )
+        
+        render json: { token: token, user: { id: user.id, email: user.email } }
+        else
         render json: { error: 'Invalid email or password' }, status: :unauthorized
-      end
+        end
     end
+  
   
     private
   

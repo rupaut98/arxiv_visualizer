@@ -21,6 +21,7 @@ class Api::V1::PapersController < ApplicationController
     end
   end
   
+  # app/controllers/api/v1/papers_controller.rb
   def search
     if params[:query].present?
       page = params[:page].to_i
@@ -36,11 +37,29 @@ class Api::V1::PapersController < ApplicationController
         params[:sort_by] || 'relevance'
       )
       
+      # Store the essential paper data in the database for faster bookmarking
+      # but don't render anything in this loop
+      papers.each do |paper_data|
+        unless Paper.exists?(arxiv_id: paper_data[:arxiv_id])
+          Paper.create(
+            arxiv_id: paper_data[:arxiv_id],
+            title: paper_data[:title],
+            authors: paper_data[:authors],
+            abstract: paper_data[:abstract],
+            url: paper_data[:url],
+            published_date: paper_data[:published_date]
+          )
+        end
+      end
+      
+      # Only render once at the end
       render json: { papers: papers }
     else
       render json: { papers: [] }, status: :ok
     end
   end
+  
+
 
   def show
     paper = Paper.find_by(arxiv_id: params[:id])

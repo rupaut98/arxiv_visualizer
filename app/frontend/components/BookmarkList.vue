@@ -43,111 +43,130 @@
     </div>
   </template>
   
-  <script setup>
-  import { ref, onMounted } from 'vue'
-  import axios from 'axios'
-  
-  const bookmarks = ref([])
-  const loading = ref(true)
-  
-  onMounted(() => {
-    fetchBookmarks()
-  })
-  
-  const fetchBookmarks = async () => {
+<script setup>
+
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+
+const bookmarks = ref([])
+const loading = ref(true)
+
+onMounted(() => {
+fetchBookmarks()
+})
+
+// Update your fetchBookmarks function in BookmarkList.vue
+const fetchBookmarks = async () => {
     try {
-      const response = await axios.get('/api/v1/bookmarks')
-      bookmarks.value = response.data
+        // Get the token from your store or localStorage
+        const token = localStorage.getItem('token') || '';
+        
+        const response = await axios.get('/api/v1/bookmarks', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+        });
+        
+        bookmarks.value = response.data;
     } catch (error) {
-      console.error('Error fetching bookmarks:', error)
+        console.error('Error fetching bookmarks:', error);
     } finally {
-      loading.value = false
+        loading.value = false;
     }
-  }
-  
-  const removeBookmark = async (id) => {
+    }
+
+// Similarly, update your removeBookmark function
+const removeBookmark = async (id) => {
     if (confirm('Are you sure you want to remove this bookmark?')) {
-      try {
-        await axios.delete(`/api/v1/bookmarks/${id}`)
-        // Remove the bookmark from the list
-        bookmarks.value = bookmarks.value.filter(bookmark => bookmark.id !== id)
-      } catch (error) {
-        console.error('Error removing bookmark:', error)
-      }
+        try {
+        const token = localStorage.getItem('token') || '';
+        
+        await axios.delete(`/api/v1/bookmarks/${id}`, {
+            headers: {
+            'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        bookmarks.value = bookmarks.value.filter(bookmark => bookmark.id !== id);
+        } catch (error) {
+        console.error('Error removing bookmark:', error);
+        }
     }
-  }
-  
-  const formatDate = (dateString) => {
+    }
+
+
+const formatDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
     return date.toLocaleDateString()
-  }
-  
-  const truncateAbstract = (abstract) => {
+}
+
+const truncateAbstract = (abstract) => {
     if (!abstract) return ''
     return abstract.length > 300 ? abstract.substring(0, 300) + '...' : abstract
-  }
-  </script>
-  
-  <style scoped>
-  .bookmarks-container {
+}
+</script>
+
+<style scoped>
+
+.bookmarks-container {
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
-  }
-  
-  .bookmark-list {
+}
+
+.bookmark-list {
     display: flex;
     flex-direction: column;
     gap: 20px;
     margin-top: 20px;
-  }
-  
-  .bookmark-card {
+}
+
+.bookmark-card {
     padding: 20px;
     border: 1px solid #eee;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s;
-  }
-  
-  .bookmark-card:hover {
+}
+
+.bookmark-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .bookmark-header {
+}
+
+.bookmark-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-  }
-  
-  .bookmark-header h3 {
+}
+
+.bookmark-header h3 {
     margin-top: 0;
     margin-right: 15px;
-  }
-  
-  .paper-meta {
+}
+
+.paper-meta {
     display: flex;
     justify-content: space-between;
     margin: 8px 0;
     font-size: 14px;
     color: #666;
-  }
-  
-  .abstract {
+}
+
+.abstract {
     line-height: 1.5;
     color: #444;
-  }
-  
-  .paper-actions {
+}
+
+.paper-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 15px;
-  }
-  
-  .view-btn, .arxiv-link, .remove-btn {
+}
+
+.view-btn, .arxiv-link, .remove-btn {
     padding: 8px 12px;
     border: none;
     border-radius: 4px;
@@ -155,51 +174,51 @@
     font-size: 14px;
     text-decoration: none;
     text-align: center;
-  }
-  
-  .view-btn {
+}
+
+.view-btn {
     background: #3273dc;
     color: white;
-  }
-  
-  .arxiv-link {
+}
+
+.arxiv-link {
     background: #f5f5f5;
     color: #333;
-  }
-  
-  .remove-btn {
+}
+
+.remove-btn {
     background: #ff3860;
     color: white;
-  }
-  
-  .notes {
+}
+
+.notes {
     flex-basis: 100%;
     margin-top: 10px;
     font-size: 14px;
     padding: 10px;
     background: #f9f9f9;
     border-radius: 4px;
-  }
-  
-  .no-bookmarks {
+}
+
+.no-bookmarks {
     text-align: center;
     margin: 40px 0;
-  }
-  
-  .search-link {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 8px 16px;
-    background: #3273dc;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-  }
-  
-  .loading {
-    text-align: center;
-    margin: 40px 0;
-    color: #666;
-  }
-  </style>
+}
+
+.search-link {
+display: inline-block;
+margin-top: 10px;
+padding: 8px 16px;
+background: #3273dc;
+color: white;
+text-decoration: none;
+border-radius: 4px;
+}
+
+.loading {
+text-align: center;
+margin: 40px 0;
+color: #666;
+}
+</style>
   

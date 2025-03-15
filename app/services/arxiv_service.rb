@@ -49,34 +49,46 @@ class ArxivService
       nil
     end
   end
-  
-  def self.parse_response(xml)
-    begin
-      doc = Nokogiri::XML(xml)
-      entries = doc.xpath('//xmlns:entry')
-      
-      entries.map do |entry|
-        published_text = entry.xpath('.//xmlns:published').text.strip
-        
-        # More robust date parsing
-        begin
-          published_date = published_text.present? ? Date.parse(published_text) : nil
-        rescue Date::Error
-          published_date = nil
+
+  # In ArxivService, add caching
+    def self.get_paper(arxiv_id)
+        # Check cache first (using Rails.cache)
+        Rails.cache.fetch("arxiv_paper_#{arxiv_id}", expires_in: 1.day) do
+        url = "http://export.arxiv.org/api/query?id_list=#{arxiv_id}"
+        response = HTTParty.get(url)
+        papers = parse_response(response.body)
+        papers.first if papers.any?
         end
-        
-        {
-          arxiv_id: entry.xpath('.//xmlns:id').text.split('/').last,
-          title: entry.xpath('.//xmlns:title').text.strip,
-          abstract: entry.xpath('.//xmlns:summary').text.strip,
-          authors: entry.xpath('.//xmlns:author/xmlns:name').map(&:text).join(', '),
-          url: entry.xpath('.//xmlns:id').text,
-          published_date: published_date
-        }
-      end
-    rescue => e
-      Rails.logger.error("Error parsing ArXiv response: #{e.message}")
-      []
     end
+  
+  
+    def self.parse_response(xml)
+        begin
+        doc = Nokogiri::XML(xml)
+        entries = doc.xpath('//xmlns:entry')
+        
+        entries.map do |entry|
+            published_text = entry.xpath('.//xmlns:published').text.strip
+            
+            # More robust date parsing
+            begin
+            published_date = published_text.present? ? Date.parse(published_text) : nil
+            rescue Date::Error
+            published_date = nil
+            end
+            
+            {
+            arxiv_id: entry.xpath('.//xmlns:id').text.split('/').last,
+            title: entry.xpath('.//xmlns:title').text.strip,
+            abstract: entry.xpath('.//xmlns:summary').text.strip,
+            authors: entry.xpath('.//xmlns:author/xmlns:name').map(&:text).join(', '),
+            url: entry.xpath('.//xmlns:id').text,
+            published_date: published_date
+            }
+        end
+        rescue => e
+        Rails.logger.error("Error parsing ArXiv response: #{e.message}")
+        []
+        end
   end
 end
