@@ -7,9 +7,10 @@ export default defineConfig({
     RubyPlugin(),
     vue()
   ],
-  build: {
-    rollupOptions: {
-      external: ['axios', 'vuex', 'vue-router'],
-    },
+  resolve: {
+    dedupe: ['vue']
   },
+  optimizeDeps: {
+    include: ['vuex', 'vue-router', 'axios']
+  }
 })

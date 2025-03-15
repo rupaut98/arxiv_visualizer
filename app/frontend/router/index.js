@@ -1,4 +1,6 @@
+// app/frontend/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
+import Home from '../components/Home.vue'
 import PaperSearch from '../components/PaperSearch.vue'
 import PaperDetail from '../components/PaperDetail.vue'
 import CitationNetwork from '../components/CitationNetwork.vue'
@@ -11,17 +13,25 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: PaperSearch
+    component: Home
+  },
+  {
+    path: '/search',
+    name: 'PaperSearch',
+    component: PaperSearch,
+    meta: { requiresAuth: true }  // Add this to protect the route
   },
   {
     path: '/papers/:id',
     name: 'PaperDetail',
-    component: PaperDetail
+    component: PaperDetail,
+    meta: { requiresAuth: true }
   },
   {
     path: '/papers/:id/citations',
     name: 'CitationNetwork',
-    component: CitationNetwork
+    component: CitationNetwork,
+    meta: { requiresAuth: true }
   },
   {
     path: '/bookmarks',
@@ -46,15 +56,18 @@ const router = createRouter({
   routes
 })
 
+// Navigation guard
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
+    // This route requires auth, check if logged in
     if (!store.getters.isLoggedIn) {
+      // Not logged in, redirect to login page
       next({ name: 'Login' })
     } else {
-      next()
+      next() // User is logged in, proceed
     }
   } else {
-    next()
+    next() // No auth required, proceed
   }
 })
 
