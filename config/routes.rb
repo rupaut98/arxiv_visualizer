@@ -4,6 +4,8 @@ Rails.application.routes.draw do
       # Auth routes
       post '/register', to: 'auth#register'
       post '/login', to: 'auth#login'
+      get '/auth/status', to: 'auth_status#show'
+
       
       # Paper routes
       resources :papers, only: [:index, :show] do

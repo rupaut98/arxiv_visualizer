@@ -77,34 +77,45 @@
     name: 'PaperSearch',
     
     setup() {
-      const store = useStore();
+        const store = useStore();
+        
+        const searchQuery = ref('');
+        const papers = ref([]);
+        const loading = ref(false);
+        const error = ref(null);
+        const currentPage = ref(1);
+        const bookmarkedPapers = ref([]);
       
-      const searchQuery = ref('');
-      const papers = ref([]);
-      const loading = ref(false);
-      const error = ref(null);
-      const currentPage = ref(1);
-      const bookmarkedPapers = ref([]);
-      
-      // Fetch bookmarked papers on component mount
-      onMounted(async () => {
+        onMounted(async () => {
         try {
-          if (store.getters.isLoggedIn) {
+            // First check authentication status
+            const authResponse = await fetch('/api/v1/auth/status', {
+            headers: {
+                'Authorization': store.getters.isLoggedIn ? `Bearer ${store.state.token}` : ''
+            }
+            });
+            
+            const authData = await authResponse.json();
+            console.log('Authentication status:', authData);
+            
+            if (authData.authenticated) {
+            // Now fetch bookmarks if authenticated
             const response = await fetch('/api/v1/bookmarks', {
-              headers: {
+                headers: {
                 'Authorization': `Bearer ${store.state.token}`
-              }
+                }
             });
             
             if (!response.ok) throw new Error('Failed to fetch bookmarks');
             
             const data = await response.json();
             bookmarkedPapers.value = data.map(bookmark => bookmark.paper.arxiv_id);
-          }
+            }
         } catch (err) {
-          console.error('Error fetching bookmarks:', err);
+            console.error('Error during component initialization:', err);
         }
-      });
+        });
+
       
       const searchPapers = async () => {
         if (!searchQuery.value.trim()) return;

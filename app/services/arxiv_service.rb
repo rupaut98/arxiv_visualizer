@@ -13,39 +13,70 @@ class ArxivService
     
     params[:sortBy] = sort_by if sort_by
     
-    response = HTTParty.get(url, query: params)
-    parse_response(response.body)
+    # Add retry mechanism with exponential backoff
+    max_retries = 3
+    retries = 0
+    
+    begin
+      response = HTTParty.get(url, query: params, timeout: 30)  # Add a timeout
+      parse_response(response.body)
+    rescue Errno::ECONNRESET, Net::ReadTimeout, Net::OpenTimeout => e
+      retries += 1
+      if retries <= max_retries
+        sleep_time = 2 ** retries  # Exponential backoff: 2, 4, 8 seconds
+        Rails.logger.warn("Connection error with ArXiv API. Retrying in #{sleep_time} seconds... (Attempt #{retries}/#{max_retries})")
+        sleep(sleep_time)
+        retry
+      else
+        Rails.logger.error("Failed to connect to ArXiv API after #{max_retries} attempts: #{e.message}")
+        return []  # Return empty array instead of raising an error
+      end
+    rescue => e
+      Rails.logger.error("Unexpected error with ArXiv API: #{e.message}")
+      return []
+    end
   end
   
   def self.get_paper(arxiv_id)
     url = "http://export.arxiv.org/api/query?id_list=#{arxiv_id}"
-    response = HTTParty.get(url)
-    papers = parse_response(response.body)
-    papers.first if papers.any?
+    
+    begin
+      response = HTTParty.get(url, timeout: 30)
+      papers = parse_response(response.body)
+      papers.first if papers.any?
+    rescue => e
+      Rails.logger.error("Error fetching paper #{arxiv_id}: #{e.message}")
+      nil
+    end
   end
   
   def self.parse_response(xml)
-    doc = Nokogiri::XML(xml)
-    entries = doc.xpath('//xmlns:entry')
-    
-    entries.map do |entry|
-      published_text = entry.xpath('.//xmlns:published').text.strip
+    begin
+      doc = Nokogiri::XML(xml)
+      entries = doc.xpath('//xmlns:entry')
       
-      # More robust date parsing
-      begin
-        published_date = published_text.present? ? Date.parse(published_text) : nil
-      rescue Date::Error
-        published_date = nil
+      entries.map do |entry|
+        published_text = entry.xpath('.//xmlns:published').text.strip
+        
+        # More robust date parsing
+        begin
+          published_date = published_text.present? ? Date.parse(published_text) : nil
+        rescue Date::Error
+          published_date = nil
+        end
+        
+        {
+          arxiv_id: entry.xpath('.//xmlns:id').text.split('/').last,
+          title: entry.xpath('.//xmlns:title').text.strip,
+          abstract: entry.xpath('.//xmlns:summary').text.strip,
+          authors: entry.xpath('.//xmlns:author/xmlns:name').map(&:text).join(', '),
+          url: entry.xpath('.//xmlns:id').text,
+          published_date: published_date
+        }
       end
-      
-      {
-        arxiv_id: entry.xpath('.//xmlns:id').text.split('/').last,
-        title: entry.xpath('.//xmlns:title').text.strip,
-        abstract: entry.xpath('.//xmlns:summary').text.strip,
-        authors: entry.xpath('.//xmlns:author/xmlns:name').map(&:text).join(', '),
-        url: entry.xpath('.//xmlns:id').text,
-        published_date: published_date
-      }
+    rescue => e
+      Rails.logger.error("Error parsing ArXiv response: #{e.message}")
+      []
     end
   end
 end
