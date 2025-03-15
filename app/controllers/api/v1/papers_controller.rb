@@ -20,6 +20,7 @@ class Api::V1::PapersController < ApplicationController
       render json: [], status: :ok
     end
   end
+  
 
   def show
     paper = Paper.find_by(arxiv_id: params[:id])

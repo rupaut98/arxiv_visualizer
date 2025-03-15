@@ -50,6 +50,24 @@
       
       <div v-else-if="papers.length > 0" class="paper-list">
         <paper-list :papers="papers" @bookmark="bookmarkPaper"></paper-list>
+        
+        <!-- Pagination controls -->
+        <div class="pagination">
+          <button 
+            @click="previousPage" 
+            :disabled="currentPage === 1" 
+            class="pagination-btn"
+          >
+            Previous
+          </button>
+          <span class="page-info">Page {{ currentPage }}</span>
+          <button 
+            @click="nextPage" 
+            class="pagination-btn"
+          >
+            Next
+          </button>
+        </div>
       </div>
       
       <div v-else-if="hasSearched" class="no-results">
@@ -72,9 +90,19 @@
   const papers = ref([])
   const loading = ref(false)
   const hasSearched = ref(false)
+  const currentPage = ref(1)
   
-  const searchPapers = async () => {
+  // Compute the start index for pagination
+  const startIndex = computed(() => {
+    return (currentPage.value - 1) * maxResults.value
+  })
+  
+  const searchPapers = async (resetPage = true) => {
     if (!searchQuery.value.trim()) return
+    
+    if (resetPage) {
+      currentPage.value = 1
+    }
     
     loading.value = true
     hasSearched.value = true
@@ -91,11 +119,15 @@
         params: {
           query: formattedQuery,
           max_results: maxResults.value,
+          start: startIndex.value,
           sort_by: sortBy.value
         }
       })
       
       papers.value = response.data
+      
+      // Scroll to top when loading new results
+      window.scrollTo(0, 0)
     } catch (error) {
       console.error('Error fetching papers:', error)
     } finally {
@@ -103,8 +135,20 @@
     }
   }
   
+  const nextPage = () => {
+    currentPage.value++
+    searchPapers(false)
+  }
+  
+  const previousPage = () => {
+    if (currentPage.value > 1) {
+      currentPage.value--
+      searchPapers(false)
+    }
+  }
+  
   const bookmarkPaper = (paper) => {
-    // This will be implemented to save bookmarks
+    // Save bookmarks
     axios.post('/api/v1/bookmarks', { arxiv_id: paper.arxiv_id })
       .then(() => {
         alert('Paper bookmarked successfully!')
@@ -172,6 +216,32 @@
     text-align: center;
     margin: 40px 0;
     color: #666;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 30px 0;
+    gap: 15px;
+  }
+  
+  .pagination-btn {
+    padding: 8px 15px;
+    background: #3273dc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .pagination-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .page-info {
+    font-size: 16px;
   }
   </style>
   
