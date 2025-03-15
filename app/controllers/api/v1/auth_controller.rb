@@ -26,11 +26,12 @@ class Api::V1::AuthController < ApplicationController
     private
   
     def user_params
-      params.permit(:email, :password, :username)
+        params.require(:auth).permit(:email, :password, :username)
     end
-  
+      
     def generate_token(user_id)
-      JWT.encode({ user_id: user_id }, Rails.application.secrets.secret_key_base)
+        JWT.encode({ user_id: user_id }, Rails.application.secret_key_base)
     end
+      
   end
   

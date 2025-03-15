@@ -3,6 +3,9 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :null_session
   before_action :authenticate_user
   
+  # Skip authentication for these routes
+  skip_before_action :authenticate_user, only: [:index]
+  
   def index
     render template: 'layouts/application'
   end
