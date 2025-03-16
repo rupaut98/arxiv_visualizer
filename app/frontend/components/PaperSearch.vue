@@ -1,6 +1,5 @@
 <template>
     <div class="max-w-4xl mx-auto px-4">
-      <!-- Header -->
       <div class="text-center mb-12">
         <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-500 to-purple-600 inline-block text-transparent bg-clip-text">
           Search arXiv Papers
@@ -8,7 +7,6 @@
         <p class="text-gray-300 text-lg">Discover and organize research papers from arXiv</p>
       </div>
       
-      <!-- Search Panel -->
       <div class="mb-12">
         <div class="w-full">
           <div class="relative flex items-center">
@@ -33,13 +31,11 @@
         </div>
       </div>
       
-      <!-- Loading State -->
       <div v-if="loading" class="flex flex-col items-center justify-center py-16 text-gray-300">
         <div class="w-10 h-10 border-3 border-gray-700 border-t-blue-500 rounded-full animate-spin mb-4"></div>
         <p>Searching arXiv database...</p>
       </div>
       
-      <!-- Error State -->
       <div v-else-if="error" class="flex flex-col items-center text-center py-16 text-red-500">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
@@ -55,35 +51,35 @@
         </button>
       </div>
       
-      <!-- No Results -->
+
       <div v-else-if="papers.length === 0 && searchQuery && hasSearched" class="flex flex-col items-center text-center py-16 text-gray-300">
         <p>No papers found for "{{ searchQuery }}"</p>
         <p class="text-sm text-gray-500 mt-1">Try different keywords or check your spelling</p>
       </div>
       
-      <!-- Results Info -->
+
       <div v-else-if="papers.length > 0" class="mb-4 text-gray-300 text-sm">
         <span>Showing results for "{{ searchQuery }}"</span>
       </div>
       
-      <!-- Papers List -->
+
       <div v-if="papers.length > 0 && !loading" class="flex flex-col space-y-6">
         <div 
           v-for="paper in papers" 
           :key="paper.arxiv_id" 
           class="bg-gray-900 bg-opacity-80 backdrop-blur-md rounded-xl border border-gray-800 p-6 transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-blue-500/50"
         >
-          <div class="flex justify-between gap-4 mb-4">
+        <div class="flex justify-between items-start gap-4 mb-4">
             <h2 class="text-xl font-medium text-white leading-tight">{{ paper.title }}</h2>
             <button 
-              @click="toggleBookmark(paper)" 
-              :class="[
-                'p-1.5 rounded-lg transition-colors', 
+                @click="toggleBookmark(paper)" 
+                :class="[
+                'p-1.5 rounded-lg transition-colors flex-shrink-0 h-8 w-8 flex items-center justify-center', 
                 isBookmarked(paper.arxiv_id) 
-                  ? 'text-yellow-400 hover:bg-yellow-500/10' 
-                  : 'text-gray-500 hover:text-white hover:bg-white/5'
-              ]"
-              :title="isBookmarked(paper.arxiv_id) ? 'Remove from bookmarks' : 'Add to bookmarks'"
+                    ? 'text-yellow-400 hover:bg-yellow-500/10' 
+                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                ]"
+                :title="isBookmarked(paper.arxiv_id) ? 'Remove from bookmarks' : 'Add to bookmarks'"
             >
               <svg 
                 class="w-5 h-5" 
@@ -167,7 +163,7 @@
         </div>
       </div>
       
-      <!-- Pagination -->
+
       <div v-if="papers.length > 0 && !loading" class="flex justify-center items-center gap-8 mt-12 py-4">
         <button 
           :disabled="currentPage === 1" 
@@ -201,7 +197,6 @@
   </template>
   
   <script setup>
-  // Your existing script remains the same
   import { ref, computed, onMounted } from 'vue';
   import { useStore } from 'vuex';
   
