@@ -40,13 +40,17 @@
           </div>
           
           <div class="paper-actions">
-            <router-link :to="`/papers/${paper.arxiv_id}`" class="view-details">
-              View Details
+            <a :href="getPdfUrl(paper.url)" target="_blank" class="view-paper">
+                View Paper
+            </a>
+            <a :href="paper.url" target="_blank" class="take-me-there">
+                Take Me There
+            </a>
+            <router-link :to="`/papers/${paper.arxiv_id}/citations`" class="view-citation-network">
+                View Citation Network
             </router-link>
-            <router-link :to="`/papers/${paper.arxiv_id}/citations`" class="view-citations">
-              View Citations
-            </router-link>
-          </div>
+            </div>
+
         </div>
       </div>
       
@@ -115,7 +119,10 @@
             console.error('Error during component initialization:', err);
         }
         });
-
+        
+        const getPdfUrl = (absUrl) => {     
+            return absUrl.replace('/abs/', '/pdf/') + '.pdf';
+            };
       
         const searchPapers = async () => {
             if (!searchQuery.value.trim()) return;
@@ -234,7 +241,8 @@
             changePage,
             formatDate,
             isBookmarked,
-            toggleBookmark
+            toggleBookmark,
+            getPdfUrl
         };
         }
     }
@@ -335,17 +343,27 @@ display: flex;
 gap: 1rem;
 }
 
-.view-details, .view-citations {
-padding: 0.5rem 1rem;
-background-color: #2196F3;
-color: white;
-text-decoration: none;
-border-radius: 4px;
-font-size: 0.9rem;
+.view-paper, .view-citation-network, .take-me-there {
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
-.view-citations {
-background-color: #9C27B0;
+.view-paper {
+  background-color: #2196F3;
+  color: white;
+}
+
+.take-me-there {
+  background-color: #4CAF50;  /* Green */
+  color: white;
+}
+
+.view-citation-network {
+  background-color: #9C27B0;
+  color: white;
 }
 
 .bookmark-button {
