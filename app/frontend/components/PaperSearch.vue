@@ -39,7 +39,7 @@
         <button @click="searchPapers" class="retry-button">Try Again</button>
       </div>
       
-      <div v-else-if="papers.length === 0 && searchQuery" class="no-results">
+      <div v-else-if="papers.length === 0 && searchQuery && hasSearched" class="no-results">
         <p>No papers found for "{{ searchQuery }}"</p>
         <p class="no-results-hint">Try different keywords or check your spelling</p>
       </div>
@@ -156,6 +156,7 @@
   const error = ref(null);
   const currentPage = ref(1);
   const bookmarkedPapers = ref([]);
+  const hasSearched = ref(false);
   
   onMounted(async () => {
     try {
@@ -196,7 +197,7 @@
     
     loading.value = true;
     error.value = null;
-    
+    hasSearched.value = true;
     try {
       // Use the dedicated search endpoint
       const response = await fetch(`/api/v1/papers/search?query=${encodeURIComponent(searchQuery.value)}&page=${currentPage.value}`, {
