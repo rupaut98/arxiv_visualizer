@@ -1,7 +1,7 @@
-// app/frontend/store/index.js
 import { createStore } from 'vuex'
 import axios from 'axios'
 
+//token storage
 export default createStore({
     state: {
       token: localStorage.getItem('token') || '',
@@ -25,7 +25,7 @@ export default createStore({
       }
     },
   actions: {
-    login({ commit }, user) {
+    login({ commit }, user) { //save token when logging in
       return new Promise((resolve, reject) => {
         axios.post('/api/v1/login', user)
           .then(resp => {
@@ -44,7 +44,7 @@ export default createStore({
           })
       })
     },
-    register({ commit }, user) {
+    register({ commit }, user) { //save token when reigistering in
       return new Promise((resolve, reject) => {
         axios.post('/api/v1/register', user)
           .then(resp => {
@@ -63,7 +63,7 @@ export default createStore({
           })
       })
     },
-    logout({ commit }) {
+    logout({ commit }) { //remove token when logging out
       return new Promise(resolve => {
         commit('logout')
         localStorage.removeItem('token')

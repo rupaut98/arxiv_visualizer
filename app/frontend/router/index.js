@@ -17,7 +17,7 @@ const routes = [
     path: '/search',
     name: 'PaperSearch',
     component: PaperSearch,
-    meta: { requiresAuth: true }  // Add this to protect the route
+    meta: { requiresAuth: true }
   },
   
   {
@@ -43,7 +43,6 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // This route requires auth, check if logged in

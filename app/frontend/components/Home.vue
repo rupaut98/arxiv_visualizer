@@ -80,7 +80,7 @@
             <div class="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-600 absolute -bottom-4 left-1/2 transform -translate-x-1/2 rounded-full"></div>
           </h2>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <!-- Feature 1 -->
             <div class="bg-gray-900 bg-opacity-80 rounded-xl p-6 transition-all duration-300 hover:translate-y-[-8px] backdrop-blur-md border border-gray-800 hover:border-blue-500/50 group">
               <div class="w-14 h-14 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:bg-blue-500/20 transition-colors duration-300">
@@ -114,16 +114,6 @@
               <p class="text-gray-400 leading-relaxed">Visualize connections between papers and discover related research</p>
             </div>
             
-            <!-- Feature 4 -->
-            <div class="bg-gray-900 bg-opacity-80 rounded-xl p-6 transition-all duration-300 hover:translate-y-[-8px] backdrop-blur-md border border-gray-800 hover:border-purple-500/50 group">
-              <div class="w-14 h-14 bg-purple-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:bg-purple-500/20 transition-colors duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <h3 class="text-lg font-bold mb-3 text-white group-hover:text-purple-400 transition-colors duration-300">Personalization</h3>
-              <p class="text-gray-400 leading-relaxed">Customize your experience with personalized recommendations</p>
-            </div>
           </div>
         </div>
       </section>

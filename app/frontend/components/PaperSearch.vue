@@ -146,19 +146,7 @@
               </svg>
               arXiv Page
             </a>
-            
-            <router-link 
-              :to="`/papers/${paper.arxiv_id}/citations`" 
-              class="flex items-center gap-1 px-4 py-2 bg-purple-500/10 text-purple-400 rounded-lg hover:bg-purple-500/20 transition-colors"
-            >
-              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="6" y1="3" x2="6" y2="15"></line>
-                <circle cx="18" cy="6" r="3"></circle>
-                <circle cx="6" cy="18" r="3"></circle>
-                <path d="M18 9a9 9 0 0 1-9 9"></path>
-              </svg>
-              Citations
-            </router-link>
+        
           </div>
         </div>
       </div>
@@ -196,157 +184,182 @@
     </div>
   </template>
   
-  <script setup>
-  import { ref, computed, onMounted } from 'vue';
-  import { useStore } from 'vuex';
-  
-  const store = useStore();
-  
-  const searchQuery = ref('');
-  const papers = ref([]);
-  const loading = ref(false);
-  const error = ref(null);
-  const currentPage = ref(1);
-  const bookmarkedPapers = ref([]);
-  const hasSearched = ref(false);
-  
-  onMounted(async () => {
-    try {
-      // First check authentication status
-      const authResponse = await fetch('/api/v1/auth/status', {
-        headers: {
-          'Authorization': store.getters.isLoggedIn ? `Bearer ${store.state.token}` : ''
-        }
-      });
-      
-      const authData = await authResponse.json();
-      console.log('Authentication status:', authData);
-      
-      if (authData.authenticated) {
-        const response = await fetch('/api/v1/bookmarks', {
-          headers: {
-            'Authorization': `Bearer ${store.state.token}`
-          }
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch bookmarks');
-        
-        const data = await response.json();
-        bookmarkedPapers.value = data.map(bookmark => bookmark.paper.arxiv_id);
+<script setup>
+import { useSearchStore } from '@/store/searchStore';
+import { ref, computed, onMounted } from 'vue';
+import { useStore } from 'vuex';
+
+const store = useStore();
+const searchStore = useSearchStore();
+
+// Convert local refs to computed properties backed by Pinia
+const searchQuery = computed({
+  get: () => searchStore.searchQuery,
+  set: (value) => searchStore.setSearchQuery(value)
+});
+
+const papers = computed(() => searchStore.papers);
+const currentPage = computed({
+  get: () => searchStore.currentPage,
+  set: (value) => searchStore.setPage(value)
+});
+const hasSearched = computed({
+  get: () => searchStore.hasSearched,
+  set: (value) => searchStore.setHasSearched(value)
+});
+const bookmarkedPapers = computed({
+  get: () => searchStore.bookmarkedPapers,
+  set: (value) => searchStore.setBookmarkedPapers(value)
+});
+
+// Keep these as local refs since they don't need to persist
+const loading = ref(false);
+const error = ref(null);
+
+onMounted(async () => {
+  try {
+    // First check authentication status
+    const authResponse = await fetch('/api/v1/auth/status', {
+      headers: {
+        'Authorization': store.getters.isLoggedIn ? `Bearer ${store.state.token}` : ''
       }
-    } catch (err) {
-      console.error('Error during component initialization:', err);
-    }
-  });
-  
-  const getPdfUrl = (absUrl) => {     
-    return absUrl.replace('/abs/', '/pdf/') + '.pdf';
-  };
-  
-  const searchPapers = async () => {
-    if (!searchQuery.value.trim()) return;
+    });
     
-    loading.value = true;
-    error.value = null;
-    hasSearched.value = true;
-    try {
-      // Use the dedicated search endpoint
-      const response = await fetch(`/api/v1/papers/search?query=${encodeURIComponent(searchQuery.value)}&page=${currentPage.value}`, {
+    const authData = await authResponse.json();
+    console.log('Authentication status:', authData);
+    
+    if (authData.authenticated) {
+      const response = await fetch('/api/v1/bookmarks', {
         headers: {
-          'Authorization': store.getters.isLoggedIn ? `Bearer ${store.state.token}` : ''
+          'Authorization': `Bearer ${store.state.token}`
         }
       });
       
-      if (!response.ok) throw new Error('Failed to fetch papers');
+      if (!response.ok) throw new Error('Failed to fetch bookmarks');
       
       const data = await response.json();
-      papers.value = data.papers || [];
-    } catch (err) {
-      error.value = 'Error searching for papers. Please try again.';
-      console.error('Error searching papers:', err);
-    } finally {
-      loading.value = false;
+      // Update the store instead of local ref
+      searchStore.setBookmarkedPapers(data.map(bookmark => bookmark.paper.arxiv_id));
     }
-  };
-  
-  const changePage = (newPage) => {
-    if (newPage < 1) return;
     
-    currentPage.value = newPage;
-    searchPapers();
-  };
+    // Re-run search if there was a previous search
+    if (searchStore.hasSearched && searchStore.searchQuery && searchStore.papers.length === 0) {
+      await searchPapers();
+    }
+  } catch (err) {
+    console.error('Error during component initialization:', err);
+  }
+});
+
+const getPdfUrl = (absUrl) => {     
+  return absUrl.replace('/abs/', '/pdf/') + '.pdf';
+};
+
+const searchPapers = async () => {
+  if (!searchQuery.value.trim()) return;
   
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown date';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+  loading.value = true;
+  error.value = null;
+  searchStore.setHasSearched(true);
+  
+  try {
+    // Use the dedicated search endpoint
+    const response = await fetch(`/api/v1/papers/search?query=${encodeURIComponent(searchQuery.value)}&page=${currentPage.value}`, {
+      headers: {
+        'Authorization': store.getters.isLoggedIn ? `Bearer ${store.state.token}` : ''
+      }
     });
-  };
-  
-  const isBookmarked = (arxivId) => {
-    return bookmarkedPapers.value.includes(arxivId);
-  };
-  
-  const toggleBookmark = async (paper) => {
-    if (!store.getters.isLoggedIn) {
-      alert('Please log in to bookmark papers');
-      return;
-    }
     
-    try {
-      if (isBookmarked(paper.arxiv_id)) {
-        // Find the bookmark ID to delete
-        const response = await fetch('/api/v1/bookmarks', {
+    if (!response.ok) throw new Error('Failed to fetch papers');
+    
+    const data = await response.json();
+    // Update the store
+    searchStore.setResults(data.papers || []);
+  } catch (err) {
+    error.value = 'Error searching for papers. Please try again.';
+    console.error('Error searching papers:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const changePage = (newPage) => {
+  if (newPage < 1) return;
+  
+  searchStore.setPage(newPage);
+  searchPapers();
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'Unknown date';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+};
+
+const isBookmarked = (arxivId) => {
+  return bookmarkedPapers.value.includes(arxivId);
+};
+
+const toggleBookmark = async (paper) => {
+  if (!store.getters.isLoggedIn) {
+    alert('Please log in to bookmark papers');
+    return;
+  }
+  
+  try {
+    if (isBookmarked(paper.arxiv_id)) {
+      // Find the bookmark ID to delete
+      const response = await fetch('/api/v1/bookmarks', {
+        headers: {
+          'Authorization': `Bearer ${store.state.token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch bookmarks');
+      
+      const bookmarks = await response.json();
+      const bookmark = bookmarks.find(b => b.paper.arxiv_id === paper.arxiv_id);
+      
+      if (bookmark) {
+        // Delete the bookmark
+        const deleteResponse = await fetch(`/api/v1/bookmarks/${bookmark.id}`, {
+          method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${store.state.token}`
           }
         });
         
-        if (!response.ok) throw new Error('Failed to fetch bookmarks');
+        if (!deleteResponse.ok) throw new Error('Failed to remove bookmark');
         
-        const bookmarks = await response.json();
-        const bookmark = bookmarks.find(b => b.paper.arxiv_id === paper.arxiv_id);
-        
-        if (bookmark) {
-          // Delete the bookmark
-          const deleteResponse = await fetch(`/api/v1/bookmarks/${bookmark.id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${store.state.token}`
-            }
-          });
-          
-          if (!deleteResponse.ok) throw new Error('Failed to remove bookmark');
-          
-          // Update local state
-          bookmarkedPapers.value = bookmarkedPapers.value.filter(id => id !== paper.arxiv_id);
-        }
-      } else {
-        // Add new bookmark
-        const response = await fetch('/api/v1/bookmarks', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${store.state.token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            arxiv_id: paper.arxiv_id,
-            notes: ''
-          })
-        });
-        
-        if (!response.ok) throw new Error('Failed to add bookmark');
-        
-        // Update local state
-        bookmarkedPapers.value.push(paper.arxiv_id);
+        // Update store instead of local state
+        searchStore.removeBookmark(paper.arxiv_id);
       }
-    } catch (err) {
-      console.error('Error toggling bookmark:', err);
-      alert('Failed to update bookmark. Please try again.');
+    } else {
+      // Add new bookmark
+      const response = await fetch('/api/v1/bookmarks', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${store.state.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          arxiv_id: paper.arxiv_id,
+          notes: ''
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to add bookmark');
+      
+      // Update store instead of local state
+      searchStore.addBookmark(paper.arxiv_id);
     }
-  };
-  </script>
-  
+  } catch (err) {
+    console.error('Error toggling bookmark:', err);
+    alert('Failed to update bookmark. Please try again.');
+  }
+};
+</script>
