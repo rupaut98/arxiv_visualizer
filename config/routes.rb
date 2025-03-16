@@ -5,7 +5,9 @@ Rails.application.routes.draw do
       post '/register', to: 'auth#register'
       post '/login', to: 'auth#login'
       get '/auth/status', to: 'auth_status#show'
+      get '/api/v1/bookmarks/auth_check', to: 'api/v1/bookmarks#auth_check'
       get '/api/v1/debug-auth', to: 'api/v1/bookmarks#debug_auth'
+
 
       # Paper routes
       resources :papers, only: [:index, :show] do
@@ -13,7 +15,6 @@ Rails.application.routes.draw do
           get :search  # Add this line for the search endpoint
         end
       end
-      get '/papers/:id/citations', to: 'papers#citations'
       
       # Bookmark routes
       resources :bookmarks, only: [:index, :create, :update, :destroy]
