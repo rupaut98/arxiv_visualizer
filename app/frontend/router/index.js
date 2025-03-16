@@ -2,7 +2,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../components/Home.vue'
 import PaperSearch from '../components/PaperSearch.vue'
-import PaperDetail from '../components/PaperDetail.vue'
 import BookmarkList from '../components/BookmarkList.vue'
 import Login from '../components/Login.vue'
 import Register from '../components/Register.vue'
@@ -19,13 +18,6 @@ const routes = [
     name: 'PaperSearch',
     component: PaperSearch,
     meta: { requiresAuth: true }  // Add this to protect the route
-  },
-  
-  {
-    path: '/papers/:id',
-    name: 'PaperDetail',
-    component: PaperDetail,
-    meta: { requiresAuth: true }
   },
   
   {
