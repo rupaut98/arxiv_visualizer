@@ -1,14 +1,18 @@
 <template>
-    <div class="paper-search-container">
-      <div class="search-header">
-        <h1>Search arXiv Papers</h1>
-        <p class="search-subtitle">Discover and organize research papers from arXiv</p>
+    <div class="max-w-4xl mx-auto px-4">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-500 to-purple-600 inline-block text-transparent bg-clip-text">
+          Search arXiv Papers
+        </h1>
+        <p class="text-gray-300 text-lg">Discover and organize research papers from arXiv</p>
       </div>
       
-      <div class="search-panel">
-        <div class="search-form">
-          <div class="search-input-wrapper">
-            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Search Panel -->
+      <div class="mb-12">
+        <div class="w-full">
+          <div class="relative flex items-center">
+            <svg class="absolute left-4 text-gray-500 w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
@@ -17,66 +21,96 @@
               v-model="searchQuery" 
               placeholder="Search by title, author, or keyword..." 
               @keyup.enter="searchPapers"
-              class="search-input"
+              class="flex-1 py-4 pl-12 pr-4 rounded-l-lg border border-gray-700 bg-gray-800 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
             />
-            <button @click="searchPapers" class="search-button">Search</button>
+            <button 
+              @click="searchPapers" 
+              class="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-4 px-6 rounded-r-lg transition duration-200 hover:shadow-lg hover:shadow-blue-500/20 hover:-translate-y-0.5"
+            >
+              Search
+            </button>
           </div>
         </div>
       </div>
       
-      <div v-if="loading" class="loading-state">
-        <div class="loader"></div>
+      <!-- Loading State -->
+      <div v-if="loading" class="flex flex-col items-center justify-center py-16 text-gray-300">
+        <div class="w-10 h-10 border-3 border-gray-700 border-t-blue-500 rounded-full animate-spin mb-4"></div>
         <p>Searching arXiv database...</p>
       </div>
       
-      <div v-else-if="error" class="error-state">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Error State -->
+      <div v-else-if="error" class="flex flex-col items-center text-center py-16 text-red-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
         <p>{{ error }}</p>
-        <button @click="searchPapers" class="retry-button">Try Again</button>
+        <button 
+          @click="searchPapers" 
+          class="mt-4 px-4 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg hover:bg-gray-700 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
       
-      <div v-else-if="papers.length === 0 && searchQuery && hasSearched" class="no-results">
+      <!-- No Results -->
+      <div v-else-if="papers.length === 0 && searchQuery && hasSearched" class="flex flex-col items-center text-center py-16 text-gray-300">
         <p>No papers found for "{{ searchQuery }}"</p>
-        <p class="no-results-hint">Try different keywords or check your spelling</p>
+        <p class="text-sm text-gray-500 mt-1">Try different keywords or check your spelling</p>
       </div>
       
-      <div v-else-if="papers.length > 0" class="results-info">
+      <!-- Results Info -->
+      <div v-else-if="papers.length > 0" class="mb-4 text-gray-300 text-sm">
         <span>Showing results for "{{ searchQuery }}"</span>
       </div>
       
-      <div v-if="papers.length > 0 && !loading" class="papers-list">
-        <div v-for="paper in papers" :key="paper.arxiv_id" class="paper-card">
-          <div class="paper-header">
-            <h2 class="paper-title">{{ paper.title }}</h2>
+      <!-- Papers List -->
+      <div v-if="papers.length > 0 && !loading" class="flex flex-col space-y-6">
+        <div 
+          v-for="paper in papers" 
+          :key="paper.arxiv_id" 
+          class="bg-gray-900 bg-opacity-80 backdrop-blur-md rounded-xl border border-gray-800 p-6 transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-blue-500/50"
+        >
+          <div class="flex justify-between gap-4 mb-4">
+            <h2 class="text-xl font-medium text-white leading-tight">{{ paper.title }}</h2>
             <button 
               @click="toggleBookmark(paper)" 
-              :class="['bookmark-button', { 'bookmarked': isBookmarked(paper.arxiv_id) }]"
+              :class="[
+                'p-1.5 rounded-lg transition-colors', 
+                isBookmarked(paper.arxiv_id) 
+                  ? 'text-yellow-400 hover:bg-yellow-500/10' 
+                  : 'text-gray-500 hover:text-white hover:bg-white/5'
+              ]"
               :title="isBookmarked(paper.arxiv_id) ? 'Remove from bookmarks' : 'Add to bookmarks'"
             >
-              <svg v-if="isBookmarked(paper.arxiv_id)" class="bookmark-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <svg v-else class="bookmark-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg 
+                class="w-5 h-5" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                :fill="isBookmarked(paper.arxiv_id) ? 'currentColor' : 'none'" 
+                stroke="currentColor" 
+                stroke-width="2" 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+              >
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
               </svg>
             </button>
           </div>
           
-          <div class="paper-meta">
-            <div class="paper-authors">
-              <svg class="meta-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="flex flex-wrap gap-4 mb-4">
+            <div class="flex items-center gap-1 text-gray-300 text-sm">
+              <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
               <span>{{ paper.authors }}</span>
             </div>
             
-            <div class="paper-date">
-              <svg class="meta-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="flex items-center gap-1 text-gray-300 text-sm">
+              <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -86,28 +120,42 @@
             </div>
           </div>
           
-          <div class="paper-abstract">
+          <div class="text-gray-300 leading-relaxed text-sm mb-6 max-h-36 overflow-hidden relative">
             <p>{{ paper.abstract }}</p>
+            <div class="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-gray-900 to-transparent"></div>
           </div>
           
-          <div class="paper-actions">
-            <a :href="getPdfUrl(paper.url)" target="_blank" class="action-button pdf-button">
-              <svg class="action-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="flex flex-wrap gap-3">
+            <a 
+              :href="getPdfUrl(paper.url)" 
+              target="_blank" 
+              class="flex items-center gap-1 px-4 py-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
+            >
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
               </svg>
               View PDF
             </a>
-            <a :href="paper.url" target="_blank" class="action-button arxiv-button">
-              <svg class="action-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            
+            <a 
+              :href="paper.url" 
+              target="_blank" 
+              class="flex items-center gap-1 px-4 py-2 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors"
+            >
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                 <polyline points="15 3 21 3 21 9"></polyline>
                 <line x1="10" y1="14" x2="21" y2="3"></line>
               </svg>
               arXiv Page
             </a>
-            <router-link :to="`/papers/${paper.arxiv_id}/citations`" class="action-button citation-button">
-              <svg class="action-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            
+            <router-link 
+              :to="`/papers/${paper.arxiv_id}/citations`" 
+              class="flex items-center gap-1 px-4 py-2 bg-purple-500/10 text-purple-400 rounded-lg hover:bg-purple-500/20 transition-colors"
+            >
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="6" y1="3" x2="6" y2="15"></line>
                 <circle cx="18" cy="6" r="3"></circle>
                 <circle cx="6" cy="18" r="3"></circle>
@@ -119,24 +167,32 @@
         </div>
       </div>
       
-      <div v-if="papers.length > 0 && !loading" class="pagination">
+      <!-- Pagination -->
+      <div v-if="papers.length > 0 && !loading" class="flex justify-center items-center gap-8 mt-12 py-4">
         <button 
           :disabled="currentPage === 1" 
           @click="changePage(currentPage - 1)"
-          class="pagination-button prev-button"
+          :class="[
+            'flex items-center gap-1 px-4 py-2 border rounded-lg transition-colors',
+            currentPage === 1 
+              ? 'bg-gray-800/50 text-gray-500 border-gray-800 cursor-not-allowed' 
+              : 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700 hover:border-gray-600'
+          ]"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
           Previous
         </button>
-        <div class="pagination-info">Page {{ currentPage }}</div>
+        
+        <div class="text-gray-300 text-sm">Page {{ currentPage }}</div>
+        
         <button 
           @click="changePage(currentPage + 1)"
-          class="pagination-button next-button"
+          class="flex items-center gap-1 px-4 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg hover:bg-gray-700 hover:border-gray-600 transition-colors"
         >
           Next
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
@@ -145,6 +201,7 @@
   </template>
   
   <script setup>
+  // Your existing script remains the same
   import { ref, computed, onMounted } from 'vue';
   import { useStore } from 'vuex';
   
@@ -171,7 +228,6 @@
       console.log('Authentication status:', authData);
       
       if (authData.authenticated) {
-        // Now fetch bookmarks if authenticated
         const response = await fetch('/api/v1/bookmarks', {
           headers: {
             'Authorization': `Bearer ${store.state.token}`
@@ -298,360 +354,4 @@
     }
   };
   </script>
-  
-  <style scoped>
-  .paper-search-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 0 var(--space-md);
-  }
-  
-  .search-header {
-    text-align: center;
-    margin-bottom: var(--space-xl);
-  }
-  
-  .search-header h1 {
-    font-size: 2rem;
-    margin-bottom: var(--space-xs);
-    background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  
-  .search-subtitle {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-  }
-  
-  .search-panel {
-    margin-bottom: var(--space-xl);
-  }
-  
-  .search-form {
-    width: 100%;
-  }
-  
-  .search-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  
-  .search-icon {
-    position: absolute;
-    left: var(--space-md);
-    color: var(--text-tertiary);
-  }
-  
-  .search-input {
-    flex: 1;
-    padding: var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) * 3);
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-    font-size: 1rem;
-  }
-  
-  .search-input:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-  }
-  
-  .search-button {
-    background: var(--accent-primary);
-    color: white;
-    border: none;
-    padding: var(--space-md) var(--space-lg);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color var(--transition);
-  }
-  
-  .search-button:hover {
-    background-color: #2a75e6;
-  }
-  
-  .loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-xl) 0;
-    color: var(--text-secondary);
-  }
-  
-  .loader {
-    border: 3px solid var(--bg-tertiary);
-    border-radius: 50%;
-    border-top: 3px solid var(--accent-primary);
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin-bottom: var(--space-md);
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  .error-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: var(--space-xl) 0;
-    color: var(--error);
-  }
-  
-  .error-state svg {
-    margin-bottom: var(--space-md);
-  }
-  
-  .retry-button {
-    margin-top: var(--space-md);
-    padding: var(--space-sm) var(--space-md);
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-  }
-  
-  .no-results {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: var(--space-xl) 0;
-    color: var(--text-secondary);
-  }
-  
-  .no-results-hint {
-    font-size: 0.9rem;
-    margin-top: var(--space-xs);
-    color: var(--text-tertiary);
-  }
-  
-  .results-info {
-    margin-bottom: var(--space-md);
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-  }
-  
-  .papers-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
-  }
-  
-  .paper-card {
-    background-color: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    padding: var(--space-lg);
-    transition: all var(--transition);
-  }
-  
-  .paper-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    border-color: var(--accent-primary);
-  }
-  
-  .paper-header {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--space-md);
-    margin-bottom: var(--space-md);
-  }
-  
-  .paper-title {
-    font-size: 1.25rem;
-    margin: 0;
-    color: var(--text-primary);
-    line-height: 1.4;
-    flex: 1;
-  }
-  
-  .bookmark-button {
-    background: none;
-    border: none;
-    color: var(--text-tertiary);
-    cursor: pointer;
-    padding: var(--space-xs);
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition);
-  }
-  
-  .bookmark-button:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
-  }
-  
-  .bookmark-button.bookmarked {
-    color: #FFC107;
-  }
-  
-  .paper-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-md);
-    margin-bottom: var(--space-md);
-  }
-  
-  .paper-authors, .paper-date {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-  }
-  
-  .meta-icon {
-    color: var(--text-tertiary);
-  }
-  
-  .paper-abstract {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: var(--space-lg);
-    font-size: 0.95rem;
-    max-height: 150px;
-    overflow: hidden;
-    position: relative;
-  }
-  
-  .paper-abstract::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 40px;
-    background: linear-gradient(transparent, var(--bg-secondary));
-  }
-  
-  .paper-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-md);
-  }
-  
-  .action-button {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all var(--transition);
-  }
-  
-  .action-icon {
-    width: 16px;
-    height: 16px;
-  }
-  
-  .pdf-button {
-    background-color: rgba(33, 150, 243, 0.15);
-    color: #2196F3;
-  }
-  
-  .pdf-button:hover {
-    background-color: rgba(33, 150, 243, 0.25);
-  }
-  
-  .arxiv-button {
-    background-color: rgba(76, 175, 80, 0.15);
-    color: #4CAF50;
-  }
-  
-  .arxiv-button:hover {
-    background-color: rgba(76, 175, 80, 0.25);
-  }
-  
-  .citation-button {
-    background-color: rgba(156, 39, 176, 0.15);
-    color: #9C27B0;
-  }
-  
-  .citation-button:hover {
-    background-color: rgba(156, 39, 176, 0.25);
-  }
-  
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--space-lg);
-    margin-top: var(--space-xl);
-    padding: var(--space-md) 0;
-  }
-  
-  .pagination-button {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-sm) var(--space-md);
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all var(--transition);
-  }
-  
-  .pagination-button:hover:not(:disabled) {
-    background-color: var(--accent-primary);
-    color: white;
-    border-color: var(--accent-primary);
-  }
-  
-  .pagination-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .pagination-info {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-  }
-  
-  @media (max-width: 768px) {
-    .paper-header {
-      flex-direction: column;
-      gap: var(--space-sm);
-    }
-    
-    .bookmark-button {
-      align-self: flex-start;
-    }
-    
-    .paper-actions {
-      flex-direction: column;
-      gap: var(--space-sm);
-    }
-    
-    .action-button {
-      width: 100%;
-    }
-    
-    .pagination {
-      flex-direction: column;
-      gap: var(--space-md);
-    }
-  }
-  </style>
   
