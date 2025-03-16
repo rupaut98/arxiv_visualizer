@@ -21,6 +21,7 @@ const routes = [
     component: PaperSearch,
     meta: { requiresAuth: true }  // Add this to protect the route
   },
+  
   {
     path: '/papers/:id',
     name: 'PaperDetail',

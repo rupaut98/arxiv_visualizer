@@ -42,30 +42,53 @@
     </div>
   </template>
   
-  <script setup>
-  import { ref } from 'vue'
-  import { useStore } from 'vuex'
-  import { useRouter } from 'vue-router'
+<script setup>
+import { ref } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import axios from 'axios'  // Use standard axios
+
+const email = ref('')
+const password = ref('')
+const errorMessage = ref('')
+const store = useStore()
+const router = useRouter()
   
-  const email = ref('')
-  const password = ref('')
-  const errorMessage = ref('')
-  const store = useStore()
-  const router = useRouter()
-  
-  const handleLogin = async () => {
-    try {
-      await store.dispatch('login', {
+const handleLogin = async () => {
+try {
+    const response = await axios.post('/api/v1/login', {
+    auth: {
         email: email.value,
         password: password.value
-      })
-      router.push('/search')
-    } catch (error) {
-      errorMessage.value = 'Invalid email or password'
-      console.error('Login error:', error)
     }
-  }
+    });
+    
+    if (response.data && response.data.token) {
+    const token = response.data.token;
+    localStorage.setItem('token', token);
+    
+    // Set auth header for future requests
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    store.commit('auth_success', { 
+        token, 
+        user: response.data.user 
+    });
+
+    console.log('Token stored in localStorage?', !!localStorage.getItem('token'));
+    console.log('Token starts with:', localStorage.getItem('token')?.substring(0, 10));
+    
+    router.push('/search');
+    } else {
+    throw new Error('No token received from server');
+    }
+} catch (error) {
+    errorMessage.value = 'Login failed';
+    console.error('Login error:', error);
+}
+}
   </script>
+
   
   <style scoped>
   .login-container {

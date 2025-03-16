@@ -3,24 +3,27 @@ import { createStore } from 'vuex'
 import axios from 'axios'
 
 export default createStore({
-  state: {
-    token: localStorage.getItem('token') || '',
-    user: JSON.parse(localStorage.getItem('user') || '{}'),
-  },
-  getters: {
-    isLoggedIn: state => !!state.token,
-    currentUser: state => state.user
-  },
-  mutations: {
-    auth_success(state, { token, user }) {
-      state.token = token
-      state.user = user
+    state: {
+      token: localStorage.getItem('token') || '',
+      user: JSON.parse(localStorage.getItem('user') || '{}')
     },
-    logout(state) {
-      state.token = ''
-      state.user = {}
-    }
-  },
+    getters: {
+      isLoggedIn: state => !!state.token,
+      currentUser: state => state.user
+    },
+    mutations: {
+      auth_success(state, { token, user }) {
+        state.token = token
+        state.user = user
+        localStorage.setItem('user', JSON.stringify(user))
+      },
+      logout(state) {
+        state.token = ''
+        state.user = {}
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      }
+    },
   actions: {
     login({ commit }, user) {
       return new Promise((resolve, reject) => {

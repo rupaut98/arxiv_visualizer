@@ -8,5 +8,5 @@ document.addEventListener('DOMContentLoaded', () => {
   app.use(router)
   app.use(store)
   app.mount('#app')
-  console.log('Vue app mounted') // Add this for debugging
+  console.log('Vue app mounted')
 })

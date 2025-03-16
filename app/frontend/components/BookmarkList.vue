@@ -43,57 +43,69 @@
     </div>
   </template>
   
-<script setup>
-
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
-
-const bookmarks = ref([])
-const loading = ref(true)
-
+  <script setup>
+  import { ref, onMounted } from 'vue';
+  import { useStore } from 'vuex';
+  import axios from 'axios'; 
+  
+  const store = useStore();
+  const bookmarks = ref([]);
+  const loading = ref(true);
+  
+  // Add to the mounted hook in BookmarkList.vue
 onMounted(() => {
-fetchBookmarks()
+  // Debug token storage
+  const token = localStorage.getItem('token');
+  console.log('Token in localStorage:', token ? `${token.substring(0, 15)}...` : 'No token found');
+  console.log('Authorization header:', `Bearer ${token}`.substring(0, 20) + '...');
+  
+  fetchBookmarks();
 })
 
-// Update your fetchBookmarks function in BookmarkList.vue
-const fetchBookmarks = async () => {
+  
+  const fetchBookmarks = async () => {
     try {
-        // Get the token from your store or localStorage
-        const token = localStorage.getItem('token') || '';
-        
-        const response = await axios.get('/api/v1/bookmarks', {
+      loading.value = true;
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      console.log('Token used for bookmarks request:', token ? token.substring(0, 10) + '...' : 'No token');
+      
+      // Make request with Authorization header
+      const response = await axios.get('/api/v1/bookmarks', {
         headers: {
-            'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`, // Try an alternative format
+        'HTTP_AUTHORIZATION': `Bearer ${token}`
         }
-        });
-        
-        bookmarks.value = response.data;
+      });
+      
+      console.log('Bookmarks response:', response);
+      bookmarks.value = response.data;
     } catch (error) {
-        console.error('Error fetching bookmarks:', error);
+      console.error('Error fetching bookmarks:', error.response?.data || error.message);
     } finally {
-        loading.value = false;
+      loading.value = false;
     }
-    }
-
-// Similarly, update your removeBookmark function
-const removeBookmark = async (id) => {
+  }
+  
+  // Also update removeBookmark to include auth header
+  const removeBookmark = async (id) => {
     if (confirm('Are you sure you want to remove this bookmark?')) {
-        try {
-        const token = localStorage.getItem('token') || '';
-        
+      try {
+        const token = localStorage.getItem('token');
         await axios.delete(`/api/v1/bookmarks/${id}`, {
-            headers: {
+          headers: {
             'Authorization': `Bearer ${token}`
-            }
+          }
         });
         
         bookmarks.value = bookmarks.value.filter(bookmark => bookmark.id !== id);
-        } catch (error) {
+      } catch (error) {
         console.error('Error removing bookmark:', error);
-        }
+      }
     }
-    }
-
+}
 
 const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -206,19 +218,19 @@ const truncateAbstract = (abstract) => {
 }
 
 .search-link {
-display: inline-block;
-margin-top: 10px;
-padding: 8px 16px;
-background: #3273dc;
-color: white;
-text-decoration: none;
-border-radius: 4px;
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: #3273dc;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
 }
 
 .loading {
-text-align: center;
-margin: 40px 0;
-color: #666;
+    text-align: center;
+    margin: 40px 0;
+    color: #666;
 }
 </style>
   

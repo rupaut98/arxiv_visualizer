@@ -5,8 +5,8 @@ Rails.application.routes.draw do
       post '/register', to: 'auth#register'
       post '/login', to: 'auth#login'
       get '/auth/status', to: 'auth_status#show'
+      get '/api/v1/debug-auth', to: 'api/v1/bookmarks#debug_auth'
 
-      
       # Paper routes
       resources :papers, only: [:index, :show] do
         collection do

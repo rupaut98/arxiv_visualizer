@@ -1,10 +1,45 @@
 class Api::V1::BookmarksController < ApplicationController
     before_action :set_bookmark, only: [:destroy]
+    before_action :authenticate_user
   
     def index
-      bookmarks = current_user.bookmarks.includes(:paper)
-      render json: bookmarks.as_json(include: :paper)
-    end
+        if current_user.nil?
+          return render json: { error: 'Authentication required' }, status: :unauthorized
+        end
+        
+        bookmarks = current_user.bookmarks.includes(:paper)
+        
+        render json: bookmarks.as_json(include: :paper)
+      end
+    
+      def debug_auth
+        header = request.headers['Authorization']
+        
+        response = {
+          headers_received: {
+            authorization: header
+          },
+          current_user: current_user ? {
+            id: current_user.id,
+            email: current_user.email
+          } : nil,
+          token_decoded: nil
+        }
+        
+        if header
+          token = header.split(' ').last
+          begin
+            decoded = JWT.decode(token, Rails.application.secret_key_base)[0]
+            response[:token_decoded] = decoded
+          rescue => e
+            response[:decode_error] = e.message
+          end
+        end
+        
+        render json: response
+      end
+      
+      
   
     # app/controllers/api/v1/bookmarks_controller.rb
     def create
@@ -43,7 +78,18 @@ class Api::V1::BookmarksController < ApplicationController
         end
     end
   
-  
+    def auth_check
+        if current_user
+          render json: { 
+            authenticated: true, 
+            user_id: current_user.id,
+            email: current_user.email,
+            bookmarks_count: current_user.bookmarks.count
+          }
+        else
+          render json: { authenticated: false, error: 'Authentication failed' }, status: :unauthorized
+        end
+      end
     def destroy
       @bookmark.destroy
       head :no_content

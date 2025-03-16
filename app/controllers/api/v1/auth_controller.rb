@@ -14,19 +14,23 @@ class Api::V1::AuthController < ApplicationController
   
     def login
         user = User.find_by(email: params[:auth][:email])
+        Rails.logger.debug "Login attempt for: #{params[:auth][:email]}"
+        Rails.logger.debug "User found: #{user ? 'Yes (ID: ' + user.id.to_s + ')' : 'No'}"
         
         if user && user.authenticate(params[:auth][:password])
-        token = JWT.encode(
+          token = JWT.encode(
             { user_id: user.id, exp: 24.hours.from_now.to_i },
-            Rails.application.secret_key_base,
-            'HS256'
-        )
-        
-        render json: { token: token, user: { id: user.id, email: user.email } }
+            Rails.application.secret_key_base
+          )
+          
+          Rails.logger.debug "JWT generated for user #{user.id}: #{token[0..10]}..."
+          render json: { token: token, user: { id: user.id, email: user.email, username: user.username } }
         else
-        render json: { error: 'Invalid email or password' }, status: :unauthorized
+          Rails.logger.debug "Authentication failed for email: #{params[:auth][:email]}"
+          render json: { error: 'Invalid email or password' }, status: :unauthorized
         end
-    end
+      end
+      
   
   
     private

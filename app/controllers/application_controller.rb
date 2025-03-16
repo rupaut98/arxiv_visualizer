@@ -14,17 +14,42 @@ class ApplicationController < ActionController::Base
   
   def authenticate_user
     header = request.headers['Authorization']
-    return render json: { error: 'Unauthorized' }, status: :unauthorized unless header
     
-    token = header.split(' ').last
+    return render json: { error: 'Authentication required' }, status: :unauthorized unless header
+    
+    # Better token extraction - handles various formats
+    token = header.gsub(/^Bearer\s+/, '')
+    
     begin
-      decoded = JWT.decode(token, Rails.application.secret_key_base, true, { algorithm: 'HS256' })[0]
-      @current_user = User.find(decoded['user_id'])
-    rescue JWT::DecodeError, ActiveRecord::RecordNotFound => e
-      Rails.logger.error("Authentication error: #{e.message}")
+      # Explicitly specify algorithm and verification
+      decoded = JWT.decode(
+        token, 
+        Rails.application.secret_key_base,
+        true,  # Verify the signature
+        { algorithm: 'HS256' }  # Specify the algorithm
+      )
+      
+      # Properly access the user_id from the decoded payload
+      user_id = decoded[0]['user_id']
+      
+      @current_user = User.find(user_id)
+      
+      return true
+    rescue JWT::DecodeError => e
       render json: { error: 'Invalid token' }, status: :unauthorized
+    rescue JWT::ExpiredSignature => e
+      Rails.logger.error "AUTH ERROR - Token expired: #{e.message}"
+      render json: { error: 'Token expired' }, status: :unauthorized
+    rescue ActiveRecord::RecordNotFound => e
+      Rails.logger.error "AUTH ERROR - User not found: #{e.message}"
+      render json: { error: 'User not found' }, status: :unauthorized
+    rescue => e
+      Rails.logger.error "AUTH ERROR - Unexpected: #{e.class.name} - #{e.message}"
+      render json: { error: 'Authentication failed' }, status: :unauthorized
     end
   end
+  
+  
   
   def current_user
     @current_user
