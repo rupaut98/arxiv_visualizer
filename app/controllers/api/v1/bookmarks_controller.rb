@@ -1,6 +1,6 @@
 class Api::V1::BookmarksController < ApplicationController
-    before_action :set_bookmark, only: [:destroy]
     before_action :authenticate_user
+    before_action :set_bookmark, only: [:destroy]
   
     def index
         if current_user.nil?

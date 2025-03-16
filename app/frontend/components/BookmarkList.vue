@@ -69,7 +69,6 @@ onMounted(() => {
       
       // Get token from localStorage
       const token = localStorage.getItem('token');
-      console.log('Token used for bookmarks request:', token ? token.substring(0, 10) + '...' : 'No token');
       
       // Make request with Authorization header
       const response = await axios.get('/api/v1/bookmarks', {
@@ -91,21 +90,25 @@ onMounted(() => {
   
   // Also update removeBookmark to include auth header
   const removeBookmark = async (id) => {
-    if (confirm('Are you sure you want to remove this bookmark?')) {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/api/v1/bookmarks/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        bookmarks.value = bookmarks.value.filter(bookmark => bookmark.id !== id);
-      } catch (error) {
-        console.error('Error removing bookmark:', error);
-      }
+  if (confirm('Are you sure you want to remove this bookmark?')) {
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      // Make sure to include the Authorization header
+      await axios.delete(`/api/v1/bookmarks/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      bookmarks.value = bookmarks.value.filter(bookmark => bookmark.id !== id);
+    } catch (error) {
+      console.error('Error removing bookmark:', error);
     }
+  }
 }
+
 
 const formatDate = (dateString) => {
     if (!dateString) return ''

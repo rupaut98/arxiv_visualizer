@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user
   
   # Skip authentication for these routes
-  skip_before_action :authenticate_user, only: [:index]
+  skip_before_action :authenticate_user, only: [:index], if: -> { self.class == ApplicationController }
   
   def index
     render template: 'layouts/application'
@@ -48,7 +48,6 @@ class ApplicationController < ActionController::Base
       render json: { error: 'Authentication failed' }, status: :unauthorized
     end
   end
-  
   
   
   def current_user
