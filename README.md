@@ -79,10 +79,16 @@ This application uses MySQL as its database. The configuration is defined in `co
 default: &default
   adapter: mysql2
   encoding: utf8mb4
-  pool: 
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   username: root
   password:
+  
+  # Either use socket connection (more efficient for local development)
   socket: /opt/homebrew/var/mysql/mysql.sock
+  
+  # Or use host and port for TCP/IP connection (uncomment these and comment the socket line)
+  # host: localhost
+  # port: 3306
 
 development:
   <<: *default
@@ -102,10 +108,14 @@ To set up your database:
    brew services start mysql
    ```
 
-2. **Configure MySQL User**:
+2. **Choose Connection Method:**
+   - **Socket connection** (default in configuration): Faster for local development.
+   - **Host/port connection**: Required for connecting to a MySQL server on a different machine.
+
+3. **Configure MySQL User:**
    The application is configured to use the root user with no password for simplicity since the app is in development mode.
 
-3. **Create and Migrate the Database**:
+4. **Create and Migrate the Database:**
    ```bash
    # Create the development and test databases
    rails db:create
@@ -114,9 +124,9 @@ To set up your database:
    rails db:migrate
    ```
 
-Note: If you have a different MySQL setup (different username, password, or socket path), modify the `database.yml` file accordingly.
+Note: If you have a different MySQL setup (different username, password, socket path, or need to use host/port instead of socket), modify the `database.yml` file accordingly. Remember to use either the socket method **OR** the host/port method, not both simultaneously.
 
----
+--
 
 ## Configuration
 

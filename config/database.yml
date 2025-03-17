@@ -4,7 +4,13 @@ default: &default
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   username: root
   password:
+  
+  # Either use socket connection (more efficient for local development)
   socket: /opt/homebrew/var/mysql/mysql.sock
+  
+  # Or use host and port for TCP/IP connection
+  # host: localhost
+  # port: 3306
 
 development:
   <<: *default
