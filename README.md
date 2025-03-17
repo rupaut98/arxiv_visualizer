@@ -236,7 +236,7 @@ To set up your database:
 
 4. **Create and Migrate the Database:**
    ```bash
-   # Create the development and test databases
+   # Create the development databases
    rails db:create
    
    # Run migrations to set up the schema
@@ -323,10 +323,5 @@ app
    ```bash
    bin/rails server
    ```
-   
-2. **Start the Vite Development Server:**
-   ```bash
-   bin/dev
-   ```
 
-3. Open your browser and navigate to [http://localhost:3000](http://localhost:3000) (or the configured port).
+2. Open your browser and navigate to [http://localhost:3000](http://localhost:3000) (or the configured port).
