@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 
+//search state storage
 export const useSearchStore = defineStore('search', {
   state: () => ({
     searchQuery: '',
@@ -22,18 +23,18 @@ export const useSearchStore = defineStore('search', {
     setHasSearched(value) {
       this.hasSearched = value;
     },
-    setBookmarkedPapers(papers) {
+    setBookmarkedPapers(papers) { //update bookmarked papers list
       this.bookmarkedPapers = papers;
     },
-    addBookmark(arxivId) {
+    addBookmark(arxivId) { //add paper to bookmarks
       if (!this.bookmarkedPapers.includes(arxivId)) {
         this.bookmarkedPapers.push(arxivId);
       }
     },
-    removeBookmark(arxivId) {
+    removeBookmark(arxivId) { //remove paper from bookmarks
       this.bookmarkedPapers = this.bookmarkedPapers.filter(id => id !== arxivId);
     }
   },
   
-  persist: true
+  persist: true //maintain state between page reloads
 });
