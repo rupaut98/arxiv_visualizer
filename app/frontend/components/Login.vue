@@ -17,7 +17,6 @@
             </h2>
             <p class="text-gray-300">Welcome back to ArXiv Visualizer</p>
           </div>
-          
           <div v-if="errorMessage" class="flex items-center gap-3 p-4 mb-6 bg-red-500/10 border-l-4 border-red-500 text-red-500 rounded-r">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
