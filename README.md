@@ -126,7 +126,6 @@ To set up your database:
 
 Note: If you have a different MySQL setup (different username, password, socket path, or need to use host/port instead of socket), modify the `database.yml` file accordingly. Remember to use either the socket method **OR** the host/port method, not both simultaneously.
 
---
 
 ## Configuration
 
