@@ -154,11 +154,4 @@ app
    bin/rails server
    ```
    Open your browser and navigate to [http://localhost:3000](http://localhost:3000) (or the configured port).
-```
-
-### Changes Made:
-1. **Consistent Bullet Points:** Changed `-` to `*` for bullet points in the "Table of Contents" and "Features" sections for consistency.
-2. **Added Folder Structure Section:** Added the `Folder Structure` section to match the structure you provided.
-3. **Code Block Formatting:** Ensured all code blocks are properly formatted.
-4. **Corrected Typos:** Ensured all text is grammatically correct and consistent.
-5. **Improved Readability:** Improved the overall readability and structure of the document.
+    ```
