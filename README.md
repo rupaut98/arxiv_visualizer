@@ -40,33 +40,150 @@
 Before running the application, ensure you have the following installed:
 
 - [Ruby](https://www.ruby-lang.org/en/) (recommended version 3.4.1)
-- [Rails](https://rubyonrails.org/)
-- [Node.js](https://nodejs.org/) and [Yarn](https://yarnpkg.com/) (or npm)
+- [Rails](https://rubyonrails.org/) (recommended version 8.0.1)
+- [Node.js](https://nodejs.org/) and [Yarn](https://yarnpkg.com/) (recommended version 22.13.0)
 - [MySQL](https://www.mysql.com/) (make sure it's running on your machine)
 
 ---
 
 ## Installation
 
+### 1. Setting Up Your Development Environment
+
+#### Installing Homebrew
+
+First, we need to install Homebrew. Homebrew allows us to install and compile software packages easily from source.
+
+Homebrew comes with a very simple install script. When it asks you to install XCode CommandLine Tools, say yes.
+
+Open Terminal and run the following command:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+#### Installing Ruby
+
+We'll be installing Ruby 3.4.1 (Recommended) using a version manager called ASDF.
+
+The reason we use ASDF over rbenv, rvm, or others is that ASDF can manage other languages like Node.js too.
+
+Installing ASDF is a simple two-step process. First, you install ASDF, and then add it to your shell:
+
+```bash
+cd
+git clone https://github.com/excid3/asdf.git ~/.asdf
+echo '. "$HOME/.asdf/asdf.sh"' >> ~/.zshrc
+echo '. "$HOME/.asdf/completions/asdf.bash"' >> ~/.zshrc
+echo 'legacy_version_file = yes' >> ~/.asdfrc
+exec $SHELL
+```
+
+Then, we can install ASDF plugins for each language we want to use. For Rails, we can install Ruby and Node.js for our frontend JavaScript.
+
+```bash
+asdf plugin add ruby
+asdf plugin add nodejs
+```
+
+To install Ruby and set the default version, we'll run the following commands:
+
+```bash
+asdf install ruby 3.4.1
+asdf global ruby 3.4.1
+```
+
+Update to the latest RubyGems version:
+
+```bash
+gem update --system
+```
+
+Confirm the default Ruby version matches the version you just installed:
+
+```bash
+which ruby
+#=> /Users/username/.asdf/shims/ruby
+ruby -v
+#=> 3.4.1
+```
+
+#### Installing Node.js
+
+Then, we can install the latest Node.js for handling JavaScript in our Rails apps:
+
+```bash
+asdf install nodejs 22.13.0
+asdf global nodejs 22.13.0
+```
+
+Confirm the Node.js installation:
+
+```bash
+which node
+#=> /Users/username/.asdf/shims/node
+node -v
+#=> 22.13.0
+```
+
+#### Installing Rails
+
+Install Rails using the gem command:
+
+```bash
+gem install rails -v 8.0.1
+```
+
+And now we can verify Rails is installed:
+
+```bash
+rails -v
+#=> Rails 8.0.1
+```
+
+#### Installing MySQL
+
+You can install MySQL server and client from Homebrew:
+
+```bash
+brew install mysql
+```
+
+Once this command is finished, it gives you a couple commands to run. Follow the instructions and run them:
+
+To have `launchd` start MySQL at login:
+
+```bash
+brew services start mysql
+```
+
+### 2. Setting Up the Project
+
 1. **Clone the Repository:**
+
    ```bash
    git clone https://github.com/rupaut98/arxiv_visualizer.git
    cd arxiv_visualizer
    ```
+
 2. **Install Ruby Gems:**
+
    ```bash
    bundle install
    ```
+
 3. **Install Node Dependencies:**
+
    ```bash
    yarn install
    ```
+
 4. **Tailwind CSS Setup:**
+
    Ensure you have a Tailwind CSS file at `app/frontend/styles/main.css` containing:
+
    ```css
-   @tailwind base;
-   @tailwind components;
-   @tailwind utilities;
+   @import "tailwindcss";
    ```
 
 ---
