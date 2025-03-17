@@ -10,6 +10,7 @@
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [Database Setup](#database-setup)
 - [Configuration](#configuration)
 - [Folder Structure](#folder-structure)
 - [Running the Application](#running-the-application)
@@ -41,7 +42,7 @@ Before running the application, ensure you have the following installed:
 - [Ruby](https://www.ruby-lang.org/en/) (recommended version 3.4.1)
 - [Rails](https://rubyonrails.org/)
 - [Node.js](https://nodejs.org/) and [Yarn](https://yarnpkg.com/) (or npm)
-- A database server (configured in `config/database.yml`)
+- [MySQL](https://www.mysql.com/) (make sure it's running on your machine)
 
 ---
 
@@ -67,12 +68,53 @@ Before running the application, ensure you have the following installed:
    @tailwind components;
    @tailwind utilities;
    ```
-5. **Database Setup:**
-   Create and migrate your database:
+
+---
+
+## Database Setup
+
+This application uses MySQL as its database. The configuration is defined in `config/database.yml`:
+
+```yaml
+default: &default
+  adapter: mysql2
+  encoding: utf8mb4
+  pool: 
+  username: root
+  password:
+  socket: /opt/homebrew/var/mysql/mysql.sock
+
+development:
+  <<: *default
+  database: arxiv_visualizer_development
+
+test:
+  <<: *default
+  database: arxiv_visualizer_test
+```
+
+To set up your database:
+
+1. **Install MySQL** if you haven't already:
    ```bash
+   # On macOS using Homebrew
+   brew install mysql
+   brew services start mysql
+   ```
+
+2. **Configure MySQL User**:
+   The application is configured to use the root user with no password for simplicity since the app is in development mode.
+
+3. **Create and Migrate the Database**:
+   ```bash
+   # Create the development and test databases
    rails db:create
+   
+   # Run migrations to set up the schema
    rails db:migrate
    ```
+
+Note: If you have a different MySQL setup (different username, password, or socket path), modify the `database.yml` file accordingly.
 
 ---
 
@@ -153,5 +195,10 @@ app
    ```bash
    bin/rails server
    ```
-   Open your browser and navigate to [http://localhost:3000](http://localhost:3000) (or the configured port).
-    ```
+   
+2. **Start the Vite Development Server:**
+   ```bash
+   bin/dev
+   ```
+
+3. Open your browser and navigate to [http://localhost:3000](http://localhost:3000) (or the configured port).
