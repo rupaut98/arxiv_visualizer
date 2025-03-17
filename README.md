@@ -48,6 +48,8 @@ Before running the application, ensure you have the following installed:
 
 ## Installation
 
+**This is an excerpt from https://gorails.com/setup/macos/14-sonoma.**
+
 ### 1. Setting Up Your Development Environment
 
 #### Installing Homebrew
@@ -63,8 +65,6 @@ Open Terminal and run the following command:
 ```
 
 #### Installing Ruby
-
-This is an excerpt from https://gorails.com/setup/macos/14-sonoma.
 
 We'll be installing Ruby 3.4.1 (Recommended) using a version manager called ASDF.
 
