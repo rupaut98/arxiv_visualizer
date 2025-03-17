@@ -48,6 +48,8 @@ Before running the application, ensure you have the following installed:
 
 ## Installation
 
+**This is an excerpt from https://gorails.com/setup/macos/14-sonoma.**
+
 ### 1. Setting Up Your Development Environment
 
 #### Installing Homebrew
@@ -63,8 +65,6 @@ Open Terminal and run the following command:
 ```
 
 #### Installing Ruby
-
-This is an excerpt from https://gorails.com/setup/macos/14-sonoma.
 
 We'll be installing Ruby 3.4.1 (Recommended) using a version manager called ASDF.
 
@@ -236,7 +236,7 @@ To set up your database:
 
 4. **Create and Migrate the Database:**
    ```bash
-   # Create the development and test databases
+   # Create the development databases
    rails db:create
    
    # Run migrations to set up the schema
@@ -323,10 +323,5 @@ app
    ```bash
    bin/rails server
    ```
-   
-2. **Start the Vite Development Server:**
-   ```bash
-   bin/dev
-   ```
 
-3. Open your browser and navigate to [http://localhost:3000](http://localhost:3000) (or the configured port).
+2. Open your browser and navigate to [http://localhost:3000](http://localhost:3000) (or the configured port).
