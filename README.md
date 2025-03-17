@@ -64,6 +64,8 @@ Open Terminal and run the following command:
 
 #### Installing Ruby
 
+This is an excerpt from https://gorails.com/setup/macos/14-sonoma.
+
 We'll be installing Ruby 3.4.1 (Recommended) using a version manager called ASDF.
 
 The reason we use ASDF over rbenv, rvm, or others is that ASDF can manage other languages like Node.js too.
