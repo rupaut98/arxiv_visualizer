@@ -2,6 +2,7 @@
 
 **ArXiv Visualizer** is a web application built with Ruby on Rails on the backend and Vue.js on the frontend. It allows users to search for research papers from arXiv, bookmark and manage them, and organize their research using a sleek, minimalistic interface.
 
+![ArXiv Visualizer Demo](./output.gif)
 ---
 
 ## Table of Contents

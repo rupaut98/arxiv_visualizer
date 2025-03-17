@@ -36,5 +36,8 @@ export const useSearchStore = defineStore('search', {
     }
   },
   
-  persist: true //maintain state between page reloads
+  persist: {
+    storage: sessionStorage, // Use sessionStorage
+    paths: ['searchQuery', 'currentPage'], // Only persist these fields
+  } 
 });
